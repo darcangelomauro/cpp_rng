@@ -12,6 +12,8 @@ using std::endl;
 Core::Core(int p_, int q_, int dim_)
     : p(p_), q(q_), dim(dim_)
 {
+    derived_parameters();
+
     clog << "Geometry initialized with the following parameters:" << endl;
     clog << "(p, q, dim) = (" << p << ", " << q << ", " << dim << ")" << endl;
 }
@@ -65,10 +67,21 @@ istream& Core::read_parameters(istream& in)
         in.clear();
     }
 
+    derived_parameters();
+
     clog << "Geometry initialized with the following parameters:" << endl;
     clog << "(p, q, dim) = (" << p << ", " << q << ", " << dim << ")" << endl;
 
     return in;
+}
+
+
+void Core::derived_parameters()
+{
+    nH = 0;
+    nL = 0;
+    nHL = nH + nL;
+    dim_gamma = 0;
 }
 
 ostream& operator<<(ostream& out, const Core& C)

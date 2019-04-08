@@ -13,6 +13,7 @@ class Core
 
 
         std::istream& read_parameters(std::istream& in);
+        void derived_parameters();
 
         int get_p() const {return p;}
         int get_q() const {return q;}
