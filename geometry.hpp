@@ -1,11 +1,54 @@
 #ifndef GEOMETRY_HPP
 #define GEOMETRY_HPP
 
-#include <armadillo>
+class Core
+{
+    public:
+        
+        Core(int p, int q, int dim);
+        Core(std::istream& in);
+        Core(const Core& C);
+        Core& operator=(const Core& C);
+        ~Core(){};
 
-#define MAT(i) get_mat(i)
-#define EPS(i) get_eps(i)
 
+        std::istream& read_parameters(std::istream& in);
+
+        int get_p() const {return p;}
+        int get_q() const {return q;}
+        int get_dim() const {return dim;}
+        int get_nH() const {return nH;}
+        int get_nL() const {return nL;}
+        int get_nHL() const {return nHL;}
+        int get_dim_gamma() const {return dim_gamma;}
+
+
+    protected:
+        
+        // size of H and L matrices
+        int dim;
+    
+        // number of H and L matrices (nH and nL) and total number of matrices (nHL)
+        int nH;
+        int nL;
+        int nHL;
+
+
+    private:
+
+        // (p,q) numbers
+        int p;
+        int q;
+        
+        
+        // size of gamma matrices
+        int dim_gamma;
+};
+
+
+std::ostream& operator<<(std::ostream& out, const Core& C);
+
+/*
 class Geometry
 {
     public:
@@ -39,13 +82,13 @@ class Geometry
         double calculate_S() const;                       // using H and L decomposition
         double calculate_S_fromD() const;                 // using whole Dirac operator
         
-        /* not sure this makes sense (the formulas are already manifestly real)
+        * not sure this makes sense (the formulas are already manifestly real)
          * also: functions cannot be overloaded by return type, so this will clash
          * with previous calculate_S functions
          *
         arma::cx_double calculate_S() const;              // using H and L decomposition (both real and imaginary part)
         arma::cx_double calculate_S_fromD() const;        // using whole Dirac operator (both real and imaginary part)
-        */
+        *
 
 
     private:
@@ -129,7 +172,6 @@ catch(const std::domain_error& e)
 }
 
 
-
 Geometry::~Geometry()
 {
     delete [] g;
@@ -139,6 +181,7 @@ Geometry::~Geometry()
 
 
 
+*/
 
 
 

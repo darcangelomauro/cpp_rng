@@ -1,57 +1,81 @@
+#include <iostream>
 #include "geometry.hpp"
 
 using std::istream;
+using std::ostream;
 using std::clog;
+using std::cerr;
 using std::endl;
-using namespace Geometry;
 
-istream& read_parameters(istream& in)
+// Core constructors
+
+Core::Core(int p_, int q_, int dim_)
+    : p(p_), q(q_), dim(dim_)
 {
-    p = q = dim = ncc = 0;
+    clog << "Geometry initialized with the following parameters:" << endl;
+    clog << "(p, q, dim) = (" << p << ", " << q << ", " << dim << ")" << endl;
+}
 
+Core::Core(istream& in)
+{
+    read_parameters(in);
+}
+
+// Core copy constructor
+Core::Core(const Core& C)
+{
+    dim = C.get_dim();
+    p = C.get_p();
+    q = C.get_q();
+    nH = C.get_nH();
+    nL = C.get_nL();
+    nHL = C.get_nHL();
+    dim_gamma = C.get_dim_gamma();
+    
+    clog << "Geometry initialized with the following parameters:" << endl;
+    clog << "(p, q, dim) = (" << p << ", " << q << ", " << dim << ")" << endl;
+}
+
+// Core operator =
+Core& Core::operator=(const Core& C)
+{
+    dim = C.get_dim();
+    p = C.get_p();
+    q = C.get_q();
+    nH = C.get_nH();
+    nL = C.get_nL();
+    nHL = C.get_nHL();
+    dim_gamma = C.get_dim_gamma();
+
+    clog << "Geometry overwritten with the following parameters:" << endl;
+    clog << "(p, q, dim) = (" << p << ", " << q << ", " << dim << ")" << endl;
+    
+    return *this;
+}
+
+// Core read parameters from istream
+istream& Core::read_parameters(istream& in)
+{
     if(in)
     {
         // read basic parameters
-        in >> p >> q >> dim >> ncc;
+        in >> p >> q >> dim;
          
-        if(ncc < 1)
-            throw domain_error("there must be at least one coupling constant");
-
-        // initialize coupling constant array to zero
-        g = new double [ncc];
-        for(int i=0; i<ncc; i++)
-            g[i] = 0; 
-        
-        // fill coupling constant array from input stream
-        for(int i=0; i<ncc; i++)
-            in >> g[i]; 
-
-        // check that at least one coupling constant is non-zero
-        bool check = 0
-        for(int i=0; i<ncc; i++)
-            if(g[i]) check = 1; 
-        if(!check)
-            throw domain_error("at least one coupling constant must be non-zero");
-
         // clear input stream state
         in.clear();
     }
 
-    if((p < 0) || (q < 0))
-        throw domain_error("p and q must be positive integers");
-    if(!p && !q)
-        throw domain_error("(p,q) = (0,0) is not a valid geometry");
-    if(dim < 1)
-        throw domain_error("matrix dimension must be positive non-zero integer");
-
-    
-    clog << "Geometry initialized with the following parameters" << endl;
-    clog << "(p,q) = (" << p << "," << q << ")" << endl;
-    clog << "dim = " << dim << endl;
-    for(int i=0; i<ncc; i++)
-        clog << "g" << 2*(i+1) << " = " << g[i] << endl;
-
+    clog << "Geometry initialized with the following parameters:" << endl;
+    clog << "(p, q, dim) = (" << p << ", " << q << ", " << dim << ")" << endl;
 
     return in;
 }
+
+ostream& operator<<(ostream& out, const Core& C)
+{
+    out << "Geometry (p, q, dim) = (" << C.get_p() << ", " << C.get_q() << ", " << C.get_dim() << ") ";
+
+    return out;
+}
+
 
