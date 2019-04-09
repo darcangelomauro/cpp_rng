@@ -17,7 +17,7 @@ class Geom24
         Geom24(std::istream& in);
         Geom24(const Geom24& G);
         Geom24& operator=(const Geom24& G);
-        ~Geom24(){};
+        ~Geom24();
 
         // ============== CONSTRUCTORS, ASSIGNMENT, DESTRUCTOR
 
@@ -101,7 +101,7 @@ class Geom24
 };
 
 
-std::ostream& operator<<(std::ostream& out, const Core& C);
+std::ostream& operator<<(std::ostream& out, const Geom24& C);
 
 /*
 class Geometry

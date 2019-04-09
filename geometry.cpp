@@ -66,6 +66,7 @@ Geom24::Geom24(const Geom24& G)
     dim = G.get_dim();
     p = G.get_p();
     q = G.get_q();
+    g2 = G.get_g2();
     nH = G.get_nH();
     nL = G.get_nL();
     nHL = G.get_nHL();
@@ -92,6 +93,7 @@ Geom24& Geom24::operator=(const Geom24& G)
     dim = G.get_dim();
     p = G.get_p();
     q = G.get_q();
+    g2 = G.get_g2();
     nH = G.get_nH();
     nL = G.get_nL();
     nHL = G.get_nHL();
@@ -141,7 +143,7 @@ istream& Geom24::read_parameters(istream& in)
 
 void Geom24::derived_parameters()
 {
-    nH = 0;
+    nH = 1;
     nL = 0;
     nHL = nH + nL;
     dim_gamma = 0;
