@@ -1,6 +1,9 @@
 #include <iostream>
+#include <cmath>
+#include <vector>
 #include "geometry.hpp"
 
+using std::vector;
 using std::istream;
 using std::ostream;
 using std::clog;
@@ -143,11 +146,69 @@ istream& Geom24::read_parameters(istream& in)
 
 void Geom24::derived_parameters()
 {
-    nH = 1;
+    int n = p+q;
+
+    int* gamma = new int [n];
+    for(int i=0; i<n; i++)
+        gamma[i] = i+1;
+
+    nH = 0;
     nL = 0;
-    nHL = nH + nL;
-    dim_gamma = 0;
+
+	int  count = pow(2, n);
+	// The outer for loop will run 2^n times (the number of all possible subsets).
+	// Here variable i will act as a binary counter
+	for (int i=0; i<count; i++)
+	{
+        vector<int> vec;
+		// The inner for loop will run n times, As the maximum number of elements a set can have is n
+		// This loop will generate a subset
+		for (int j=0; j<n; j++)
+		{
+			// This if condition will check if jth bit in binary representation of i is set or not
+			// if the value of (i & (1 << j)) is greater than 0, include arr[j] in the current subset
+			// otherwise exclude arr[j]
+			if ((i & (1 << j)) > 0)
+                vec.push_back(gamma[j]);
+		}
+        
+        // Now print subset if it has odd number of elements
+        int k = vec.size();
+        if(k % 2)
+        {
+            vector<int>::const_iterator end(vec.end());
+            vector<int>::const_iterator begin(vec.begin());
+            int first = 0;
+            int second = 0;
+            for(vector<int>::const_iterator l = begin; l != end; ++l)
+            {
+                if((*l) > p)
+                {
+                    first = k - (l-begin);
+                    break;
+                }
+            }
+            second = k*(k-1)/2;
+
+            if ((first+second) % 2)
+                ++nL;
+            else
+                ++nH;
+        }
+	}
+
+    delete [] gamma;
+
+    nHL = nH+nL;
+
+    
+    if(n % 2)
+        dim_gamma = pow(2, (n-1)/2);
+    else
+        dim_gamma = pow(2, n/2);
+
 }
+
 
 ostream& operator<<(ostream& out, const Geom24& G)
 {

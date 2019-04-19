@@ -49,8 +49,8 @@ class Geom24
         
         
         
-        std::istream& read_parameters(std::istream& in);
         void derived_parameters();
+        std::istream& read_parameters(std::istream& in);
 
 
 

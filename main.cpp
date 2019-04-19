@@ -10,6 +10,8 @@ int main()
 {
     Geom24 c1(cin);
 
+    cout << "c1nH: " <<c1.get_nH() << " c1nL: " << c1.get_nL() << endl;
+
     Geom24 c2(2, 1, 3, 3.453);
 
     cout << c1 << endl;
@@ -25,10 +27,13 @@ int main()
 
     cout << c1.MAT(0) << endl;
 
+
+    /*
     for(int i=0; i<10000000; i++)
     {
         Geom24 c4(2, 1, 100, 6.657);
     }
+    */
     
 
     return 0;
