@@ -42,6 +42,8 @@ class Geom24
 
         // ============== ACTION METHODS
         
+        double dirac2() const;
+        double dirac4() const;
         double calculate_S() const; // using H and L decomposition
         double calculate_S_fromD() const; // using whole Dirac operator
         
@@ -50,6 +52,7 @@ class Geom24
         
         
         void derived_parameters();
+        void shuffle();
         std::istream& read_parameters(std::istream& in);
 
 

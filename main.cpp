@@ -2,12 +2,15 @@
 #include <iostream>
 #include <cstdlib>
 #include "geometry.hpp"
+#include <ctime>
 
 using namespace std;
 
 
 int main()
 {
+    arma::arma_rng::set_seed(time(NULL));
+
     Geom24 c1(cin);
 
     cout << "c1nH: " <<c1.get_nH() << " c1nL: " << c1.get_nL() << endl;
@@ -25,6 +28,8 @@ int main()
     cout << c2 << endl;
     cout << c3 << endl;
 
+    cout << c1.MAT(0) << endl;
+    c1.shuffle();
     cout << c1.MAT(0) << endl;
 
 
