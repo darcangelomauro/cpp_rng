@@ -5,6 +5,7 @@
 
 #define MAT(i) get_mat(i)
 #define EPS(i) get_eps(i)
+#define GAMMA(i) get_gamma(i)
 
 class Geom24
 {
@@ -35,6 +36,7 @@ class Geom24
         int get_eps(int i) const {return eps[i];}
         double get_g2() const {return g2;}
         arma::cx_mat get_mat(int i) const {return mat[i];}
+        arma::cx_mat get_gamma(int i) const {return gamma[i];}
 
         // ============== GET METHODS
 
@@ -52,6 +54,7 @@ class Geom24
         
         
         void derived_parameters();
+        void init_gamma();
         void shuffle();
         std::istream& read_parameters(std::istream& in);
 
@@ -98,6 +101,9 @@ class Geom24
 
         // size of gamma matrices
         int dim_gamma;
+
+        // gamma matrices (all hermitian)
+        arma::cx_mat* gamma;   
 
         // ============== DERIVED PARAMETERS
         

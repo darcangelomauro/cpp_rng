@@ -29,8 +29,10 @@ int main()
     cout << c3 << endl;
 
     cout << c1.MAT(0) << endl;
+    cout << "S = " << c1.calculate_S() << endl;
     c1.shuffle();
     cout << c1.MAT(0) << endl;
+    cout << "S = " << c1.calculate_S() << endl;
 
 
     /*

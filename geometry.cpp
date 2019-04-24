@@ -17,9 +17,10 @@ using arma::cx_double;
 Geom24::Geom24(int p_, int q_, int dim_, double g2_)
     : p(p_), q(q_), dim(dim_), g2(g2_)
 {
-
     // initialize derived parameters
     derived_parameters();
+    gamma = new arma::cx_mat [nHL];
+    init_gamma();
 
     // allocate and initialize H and L matrices to identity
     mat = new arma::cx_mat [nHL];
@@ -45,6 +46,8 @@ Geom24::Geom24(istream& in)
     
     // initialize derived parameters
     derived_parameters();
+    gamma = new arma::cx_mat [nHL];
+    init_gamma();
 
     // allocate and initialize H and L matrices to identity
     mat = new arma::cx_mat [nHL];
@@ -81,13 +84,14 @@ Geom24::Geom24(const Geom24& G)
     // allocate and copy matrices
     mat = new arma::cx_mat [nHL];
     eps = new int [nHL];
+    gamma = new arma::cx_mat [nHL];
     for(int i=0; i<nHL; i++)
     {
         mat[i] = G.MAT(i);
         eps[i] = G.EPS(i);
+        gamma[i] = G.GAMMA(i);
     }
     
-
     clog << "Geometry initialized with the following parameters:" << endl;
     clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
 }
@@ -106,15 +110,17 @@ Geom24& Geom24::operator=(const Geom24& G)
 
     // delete, reallocate and copy matrices
     delete [] mat;
+    delete [] gamma;
     delete [] eps;
     mat = new arma::cx_mat [nHL];
     eps = new int [nHL];
+    gamma = new arma::cx_mat [nHL];
     for(int i=0; i<nHL; i++)
     {
         mat[i] = G.MAT(i);
         eps[i] = G.EPS(i);
+        gamma[i] = G.GAMMA(i);
     }
-    
     
     clog << "Geometry overwritten with the following parameters:" << endl;
     clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
@@ -127,6 +133,7 @@ Geom24::~Geom24()
 {
     delete [] mat;
     delete [] eps;
+    delete [] gamma;
 }
 
 
@@ -150,9 +157,9 @@ void Geom24::derived_parameters()
 {
     int n = p+q;
 
-    int* gamma = new int [n];
+    int* gamma_core = new int [n];
     for(int i=0; i<n; i++)
-        gamma[i] = i+1;
+        gamma_core[i] = i+1;
 
     nH = 0;
     nL = 0;
@@ -171,7 +178,7 @@ void Geom24::derived_parameters()
 			// if the value of (i & (1 << j)) is greater than 0, include arr[j] in the current subset
 			// otherwise exclude arr[j]
 			if ((i & (1 << j)) > 0)
-                vec.push_back(gamma[j]);
+                vec.push_back(gamma_core[j]);
 		}
         
         // Now print subset if it has odd number of elements
@@ -199,7 +206,7 @@ void Geom24::derived_parameters()
         }
 	}
 
-    delete [] gamma;
+    delete [] gamma_core;
 
     nHL = nH+nL;
 
@@ -209,6 +216,12 @@ void Geom24::derived_parameters()
     else
         dim_gamma = pow(2, n/2);
 
+}
+
+void Geom24::init_gamma()
+{
+    for(int i=0; i<nHL; i++)
+        gamma[i].eye(dim_gamma, dim_gamma); 
 }
 
 
@@ -234,8 +247,8 @@ double Geom24::dirac2() const
     double res = 0.;
     for(int i=0; i<nHL; i++)
     {
-        double trMM = trace(mat[i]*mat[i]);
-        double trM = trace_herm(mat[i]);
+        double trMM = trace(mat[i]*mat[i]).real();
+        double trM = trace(mat[i]).real();
 
         res += (dim*trMM + eps[i]*trM*trM);
     }
@@ -329,7 +342,8 @@ double Geom24::dirac4() const
 
                     else
                     {
-                        cx_double cliff = gamma_table[4][i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
+                        //cx_double cliff = gamma_table4[i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
+                        cx_double cliff = dim_gamma;
                         
                         if(cliff.real() != 0. || cliff.imag() != 0.)
                         {
@@ -353,7 +367,7 @@ double Geom24::dirac4() const
                             cx_double trM0M2M3 = trace(M0M2M3);
                             cx_double trM1M2M3 = trace(M1M2M3);
                             double trM0M1 = trace(M0M1).real();
-                            double trM0M2 = trace(M0M2).rel();
+                            double trM0M2 = trace(M0M2).real();
                             double trM0M3 = trace(M0M3).real();
                             double trM1M2 = trace(M1M2).real();
                             double trM1M3 = trace(M1M3).real();
@@ -367,21 +381,21 @@ double Geom24::dirac4() const
                             // add to total
 
                             // tr4 terms
-                            cx_double T1 = trM0M1M2M3 + eps[i[0]]*eps[i[1]]*eps[i[2]]*eps[i[3]]*conj(trM0M1M2M3);
+                            cx_double T1 = trM0M1M2M3 + (double)(eps[i[0]]*eps[i[1]]*eps[i[2]]*eps[i[3]])*conj(trM0M1M2M3);
                             res += 2.*dim*(cliff*T1).real();
 
                             // tr3tr1 terms
 
-                            cx_double T3 = eps[i[3]]*trM0M1M2 + eps[i[0]]*eps[i[1]]*eps[i[2]]*conj(trM0M1M2);
+                            cx_double T3 = (double)(eps[i[3]])*trM0M1M2 + (double)(eps[i[0]]*eps[i[1]]*eps[i[2]])*conj(trM0M1M2);
                             T3 = trM3*T3;
 
-                            cx_double T4 = eps[i[2]]*trM0M1M3 + eps[i[0]]*eps[i[1]]*eps[i[3]]*conj(trM0M1M3);
+                            cx_double T4 = (double)(eps[i[2]])*trM0M1M3 + (double)(eps[i[0]]*eps[i[1]]*eps[i[3]])*conj(trM0M1M3);
                             T3 += trM2*T4;
 
-                            cx_double T5 = eps[i[1]]*trM0M2M3 + eps[i[0]]*eps[i[2]]*eps[i[3]]*conj(trM0M2M3);
+                            cx_double T5 = (double)(eps[i[1]])*trM0M2M3 + (double)(eps[i[0]]*eps[i[2]]*eps[i[3]])*conj(trM0M2M3);
                             T3 += trM1*T5;
 
-                            cx_double T6 = eps[i[0]]*trM1M2M3 + eps[i[1]]*eps[i[2]]*eps[i[3]]*conj(trM1M2M3);
+                            cx_double T6 = (double)(eps[i[0]])*trM1M2M3 + (double)(eps[i[1]]*eps[i[2]]*eps[i[3]])*conj(trM1M2M3);
                             T3 += trM0*T6;
 
                             res += 2.*(cliff*T3).real();
@@ -407,7 +421,8 @@ double Geom24::dirac4() const
             {
                 for(i[0]=0; i[0]<i[3]; i[0]++)
                 {
-                    cx_double cliff = gamma_table[4][i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
+                    //cx_double cliff = gamma_table4[i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
+                    cx_double cliff = dim_gamma;
                     
                     if(cliff.real() != 0. || cliff.imag() != 0.)
                     {
@@ -444,20 +459,20 @@ double Geom24::dirac4() const
                         // add to total
 
                         // tr4 terms
-                        cx_double T1 = trM0M1M2M3 + eps[i[0]]*eps[i[1]]*eps[i[2]]*eps[i[3]]*conj(trM0M1M2M3);
+                        cx_double T1 = trM0M1M2M3 + (double)(eps[i[0]]*eps[i[1]]*eps[i[2]]*eps[i[3]])*conj(trM0M1M2M3);
                         res += dim*2.*(cliff*T1).real();
 
                         // tr3tr1 terms
-                        cx_double T3 = eps[i[3]]*trM0M1M2 + eps[i[0]]*eps[i[1]]*eps[i[2]]*conj(trM0M1M2);
+                        cx_double T3 = (double)(eps[i[3]])*trM0M1M2 + (double)(eps[i[0]]*eps[i[1]]*eps[i[2]])*conj(trM0M1M2);
                         T3 = trM3*T3;
 
-                        cx_double T4 = eps[i[2]]*trM0M1M3 + eps[i[0]]*eps[i[1]]*eps[i[3]]*conj(trM0M1M3);
+                        cx_double T4 = (double)(eps[i[2]])*trM0M1M3 + (double)(eps[i[0]]*eps[i[1]]*eps[i[3]])*conj(trM0M1M3);
                         T3 += trM2*T4;
 
-                        cx_double T5 = eps[i[1]]*trM0M2M3 + eps[i[0]]*eps[i[2]]*eps[i[3]]*conj(trM0M2M3);
+                        cx_double T5 = (double)(eps[i[1]])*trM0M2M3 + (double)(eps[i[0]]*eps[i[2]]*eps[i[3]])*conj(trM0M2M3);
                         T3 += trM1*T5;
 
-                        cx_double T6 = eps[i[0]]*trM1M2M3 + eps[i[1]]*eps[i[2]]*eps[i[3]]*conj(trM1M2M3);
+                        cx_double T6 = (double)(eps[i[0]])*trM1M2M3 + (double)(eps[i[1]]*eps[i[2]]*eps[i[3]])*conj(trM1M2M3);
                         T3 += trM0*T6;
 
                         res += 2.*(cliff*T3).real();
