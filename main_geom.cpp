@@ -1,4 +1,4 @@
-// g++ main.cpp geometry.cpp -o main -O2 -std=c++11 -larmadillo
+// g++ main_geom.cpp geometry.cpp clifford.cpp -o main_geom -O2 -std=c++11 -larmadillo
 #include <iostream>
 #include <cstdlib>
 #include "geometry.hpp"

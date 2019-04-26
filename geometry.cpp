@@ -2,15 +2,10 @@
 #include <cmath>
 #include <vector>
 #include "geometry.hpp"
+#include "clifford.hpp"
 
-using std::vector;
-using std::istream;
-using std::ostream;
-using std::clog;
-using std::cerr;
-using std::endl;
-using arma::cx_mat;
-using arma::cx_double;
+using namespace std;
+using namespace arma;
 
 // Constructors
 
@@ -19,8 +14,6 @@ Geom24::Geom24(int p_, int q_, int dim_, double g2_)
 {
     // initialize derived parameters
     derived_parameters();
-    gamma = new arma::cx_mat [nHL];
-    init_gamma();
 
     // allocate and initialize H and L matrices to identity
     mat = new arma::cx_mat [nHL];
@@ -46,8 +39,6 @@ Geom24::Geom24(istream& in)
     
     // initialize derived parameters
     derived_parameters();
-    gamma = new arma::cx_mat [nHL];
-    init_gamma();
 
     // allocate and initialize H and L matrices to identity
     mat = new arma::cx_mat [nHL];
@@ -78,18 +69,18 @@ Geom24::Geom24(const Geom24& G)
     nH = G.get_nH();
     nL = G.get_nL();
     nHL = G.get_nHL();
-    dim_gamma = G.get_dim_gamma();
+    dim_omega = G.get_dim_omega();
 
 
     // allocate and copy matrices
     mat = new arma::cx_mat [nHL];
     eps = new int [nHL];
-    gamma = new arma::cx_mat [nHL];
+    omega = new arma::cx_mat [nHL];
     for(int i=0; i<nHL; i++)
     {
-        mat[i] = G.MAT(i);
-        eps[i] = G.EPS(i);
-        gamma[i] = G.GAMMA(i);
+        mat[i] = G.get_mat(i);
+        eps[i] = G.get_eps(i);
+        omega[i] = G.get_omega(i);
     }
     
     clog << "Geometry initialized with the following parameters:" << endl;
@@ -106,20 +97,20 @@ Geom24& Geom24::operator=(const Geom24& G)
     nH = G.get_nH();
     nL = G.get_nL();
     nHL = G.get_nHL();
-    dim_gamma = G.get_dim_gamma();
+    dim_omega = G.get_dim_omega();
 
     // delete, reallocate and copy matrices
     delete [] mat;
-    delete [] gamma;
+    delete [] omega;
     delete [] eps;
     mat = new arma::cx_mat [nHL];
     eps = new int [nHL];
-    gamma = new arma::cx_mat [nHL];
+    omega = new arma::cx_mat [nHL];
     for(int i=0; i<nHL; i++)
     {
-        mat[i] = G.MAT(i);
-        eps[i] = G.EPS(i);
-        gamma[i] = G.GAMMA(i);
+        mat[i] = G.get_mat(i);
+        eps[i] = G.get_eps(i);
+        omega[i] = G.get_omega(i);
     }
     
     clog << "Geometry overwritten with the following parameters:" << endl;
@@ -133,7 +124,7 @@ Geom24::~Geom24()
 {
     delete [] mat;
     delete [] eps;
-    delete [] gamma;
+    delete [] omega;
 }
 
 
@@ -157,12 +148,13 @@ void Geom24::derived_parameters()
 {
     int n = p+q;
 
-    int* gamma_core = new int [n];
-    for(int i=0; i<n; i++)
-        gamma_core[i] = i+1;
-
-    nH = 0;
-    nL = 0;
+    // create a type (p, q) clifford module
+    Cliff C(p, q);
+    vector<cx_mat> gamma = C.get_gamma();
+    dim_omega = C.get_dim_gamma();
+    
+    vector<cx_mat> herm;
+    vector<cx_mat> anti;
 
 	int  count = pow(2, n);
 	// The outer for loop will run 2^n times (the number of all possible subsets).
@@ -178,52 +170,37 @@ void Geom24::derived_parameters()
 			// if the value of (i & (1 << j)) is greater than 0, include arr[j] in the current subset
 			// otherwise exclude arr[j]
 			if ((i & (1 << j)) > 0)
-                vec.push_back(gamma_core[j]);
+                vec.push_back(j);
 		}
         
         // Now print subset if it has odd number of elements
         int k = vec.size();
         if(k % 2)
         {
-            vector<int>::const_iterator end(vec.end());
-            vector<int>::const_iterator begin(vec.begin());
-            int first = 0;
-            int second = 0;
-            for(vector<int>::const_iterator l = begin; l != end; ++l)
-            {
-                if((*l) > p)
-                {
-                    first = k - (l-begin);
-                    break;
-                }
-            }
-            second = k*(k-1)/2;
+            cx_mat M(dim_omega, dim_omega, fill::eye);
 
-            if ((first+second) % 2)
-                ++nL;
+            vector<int>::const_iterator end(vec.end());
+            for(vector<int>::const_iterator iter = vec.begin(); iter != end; ++iter)
+                M *= gamma.at((*iter));
+
+            if(M.is_hermitian())
+                herm.push_back(M);
             else
-                ++nH;
+                anti.push_back(cx_double(0, 1)*M);
         }
 	}
 
-    delete [] gamma_core;
-
+    nH = herm.size();
+    nL = anti.size();
     nHL = nH+nL;
 
-    
-    if(n % 2)
-        dim_gamma = pow(2, (n-1)/2);
-    else
-        dim_gamma = pow(2, n/2);
+    omega = new cx_mat [nHL];
+    for(int i=0; i<nH; ++i)
+        omega[i] = herm[i];
+    for(int i=0; i<nL; ++i)
+        omega[nH+i] = anti[i];
 
 }
-
-void Geom24::init_gamma()
-{
-    for(int i=0; i<nHL; i++)
-        gamma[i].eye(dim_gamma, dim_gamma); 
-}
-
 
 ostream& operator<<(ostream& out, const Geom24& G)
 {
@@ -253,7 +230,7 @@ double Geom24::dirac2() const
         res += (dim*trMM + eps[i]*trM*trM);
     }
 
-    return 2.*dim_gamma*res;
+    return 2.*dim_omega*res;
 }
 
 
@@ -297,7 +274,7 @@ double Geom24::dirac4() const
                         // tr2tr2 term
                         temp += 6.*trM0M0*trM0M0;
                         
-                        res += dim_gamma*temp;
+                        res += dim_omega*temp;
                     }
 
 
@@ -336,14 +313,14 @@ double Geom24::dirac4() const
                         temp += 4.*eps[i[0]]*eps[i[1]]*trM0M1*trM0M1;
                         temp += 2.*trM0M0*trM1M1;
                         
-                        res += dim_gamma*temp;
+                        res += dim_omega*temp;
                     }
                     
 
                     else
                     {
                         //cx_double cliff = gamma_table4[i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
-                        cx_double cliff = dim_gamma;
+                        cx_double cliff = dim_omega;
                         
                         if(cliff.real() != 0. || cliff.imag() != 0.)
                         {
@@ -422,7 +399,7 @@ double Geom24::dirac4() const
                 for(i[0]=0; i[0]<i[3]; i[0]++)
                 {
                     //cx_double cliff = gamma_table4[i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
-                    cx_double cliff = dim_gamma;
+                    cx_double cliff = dim_omega;
                     
                     if(cliff.real() != 0. || cliff.imag() != 0.)
                     {

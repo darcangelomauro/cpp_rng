@@ -29,6 +29,7 @@ class Cliff
         int get_q() const { return q; }
         int get_dim_gamma() const { return dim_gamma; }
         arma::cx_mat get_gamma(int i) const { return gamma.at(i); }
+        std::vector<arma::cx_mat> get_gamma() const { return gamma; }
         arma::cx_mat get_chiral() const { return chiral; }
         // ============== GET METHODS
 
