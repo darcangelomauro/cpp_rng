@@ -18,8 +18,7 @@ Cliff::Cliff(int mode)
         q=0;
         dim_gamma = 1;
 
-        gamma = new cx_mat [1];
-        gamma[0] = cx_mat(1, 1, fill::eye);
+        gamma.push_back(cx_mat(1, 1, fill::eye));
         chiral = cx_mat(1, 1, fill::eye);
     }
     //(0,1)
@@ -30,10 +29,10 @@ Cliff::Cliff(int mode)
         dim_gamma = 1;
         
         cx_double z(0.,-1.);
-        gamma = new cx_mat [1];
-        gamma[0] = cx_mat(1, 1);
+        cx_mat tmp = cx_mat(1, 1);
+        tmp(0,0) = z;
+        gamma.push_back(tmp);
         chiral = cx_mat(1, 1, fill::eye);
-        gamma[0](0,0) = z;
     }
     //(2,0)
     else if(mode==0)
@@ -44,15 +43,16 @@ Cliff::Cliff(int mode)
         
         cx_double z(0.,1.);
 
-        gamma = new cx_mat [2];
+        cx_mat tmp1 = cx_mat(2, 2, fill::zeros);
+        tmp1(0,0) = 1.;
+        tmp1(1,1) = -1.;
+        gamma.push_back(tmp1);
         
-        gamma[0] = cx_mat(2, 2, fill::zeros);
-        gamma[0](0,0) = 1.;
-        gamma[0](1,1) = -1.;
-        
-        gamma[1] = cx_mat(2, 2, fill::zeros);
-        gamma[1](0,1) = 1.;
-        gamma[1](1,0) = 1.;
+        cx_mat tmp2 = cx_mat(2, 2, fill::zeros);
+        tmp2(0,1) = 1.;
+        tmp2(1,0) = 1.;
+        gamma.push_back(tmp2);
+
 
         chiral = cx_mat(2, 2, fill::zeros);
         chiral(0,1) = z;
@@ -65,15 +65,15 @@ Cliff::Cliff(int mode)
         q=1;
         dim_gamma = 2;
         
-        gamma = new cx_mat [2];
+        cx_mat tmp1 = cx_mat(2, 2, fill::zeros);
+        tmp1(0,0) = 1.;
+        tmp1(1,1) = -1.;
+        gamma.push_back(tmp1);
         
-        gamma[0] = cx_mat(2, 2, fill::zeros);
-        gamma[0](0,0) = 1.;
-        gamma[0](1,1) = -1.;
-        
-        gamma[1] = cx_mat(2, 2, fill::zeros);
-        gamma[1](0,1) = 1.;
-        gamma[1](1,0) = -1.;
+        cx_mat tmp2 = cx_mat(2, 2, fill::zeros);
+        tmp2(0,1) = 1.;
+        tmp2(1,0) = -1.;
+        gamma.push_back(tmp2);
 
         chiral = cx_mat(2, 2, fill::zeros);
         chiral(0,1) = 1;
@@ -88,15 +88,15 @@ Cliff::Cliff(int mode)
         
         cx_double z(0.,1.);
         
-        gamma = new cx_mat [2];
+        cx_mat tmp1 = cx_mat(2, 2, fill::zeros);
+        tmp1(0,0) = z;
+        tmp1(1,1) = -z;
+        gamma.push_back(tmp1);
         
-        gamma[0] = cx_mat(2, 2, fill::zeros);
-        gamma[0](0,0) = z;
-        gamma[0](1,1) = -z;
-        
-        gamma[1] = cx_mat(2, 2, fill::zeros);
-        gamma[1](0,1) = 1.;
-        gamma[1](1,0) = -1.;
+        cx_mat tmp2 = cx_mat(2, 2, fill::zeros);
+        tmp2(0,1) = 1.;
+        tmp2(1,0) = -1.;
+        gamma.push_back(tmp2);
 
         chiral = cx_mat(2, 2, fill::zeros);
         chiral(0,1) = 1.;
@@ -109,88 +109,25 @@ Cliff::Cliff(int p_, int q_)
 {
     //(1,0)
     if(p==1 && q==0)
-    {
-        dim_gamma = 1;
-
-        gamma = new cx_mat [1];
-        gamma[0] = cx_mat(1, 1, fill::eye);
-        chiral = cx_mat(1, 1, fill::eye);
-    }
+        (*this) = Cliff(3);
     //(0,1)
     if(p==0 && q==1)
-    {
-        dim_gamma = 1;
-        
-        cx_double z(0.,-1.);
-        gamma = new cx_mat [1];
-        gamma[0] = cx_mat(1, 1);
-        chiral = cx_mat(1, 1, fill::eye);
-        gamma[0](0,0) = z;
-    }
+        (*this) = Cliff(4);
     //(2,0)
     if(p==2 && q==0)
-    {
-        dim_gamma = 2;
-        
-        cx_double z(0.,1.);
-
-        gamma = new cx_mat [2];
-        
-        gamma[0] = cx_mat(2, 2, fill::zeros);
-        gamma[0](0,0) = 1.;
-        gamma[0](1,1) = -1.;
-        
-        gamma[1] = cx_mat(2, 2, fill::zeros);
-        gamma[1](0,1) = 1.;
-        gamma[1](1,0) = 1.;
-
-        chiral = cx_mat(2, 2, fill::zeros);
-        chiral(0,1) = z;
-        chiral(1,0) = -z;
-    }
+        (*this) = Cliff(0);
     //(1,1)
     if(p==1 && q==1)
-    {
-        dim_gamma = 2;
-        
-        gamma = new cx_mat [2];
-        
-        gamma[0] = cx_mat(2, 2, fill::zeros);
-        gamma[0](0,0) = 1.;
-        gamma[0](1,1) = -1.;
-        
-        gamma[1] = cx_mat(2, 2, fill::zeros);
-        gamma[1](0,1) = 1.;
-        gamma[1](1,0) = -1.;
-
-        chiral = cx_mat(2, 2, fill::zeros);
-        chiral(0,1) = 1;
-        chiral(1,0) = 1;
-    }
+        (*this) = Cliff(2);
     //(0,2)
     if(p==0 && q==2)
-    {
-        dim_gamma = 2;
-        
-        cx_double z(0.,1.);
-        
-        gamma = new cx_mat [2];
-        
-        gamma[0] = cx_mat(2, 2, fill::zeros);
-        gamma[0](0,0) = z;
-        gamma[0](1,1) = -z;
-        
-        gamma[1] = cx_mat(2, 2, fill::zeros);
-        gamma[1](0,1) = 1.;
-        gamma[1](1,0) = -1.;
-
-        chiral = cx_mat(2, 2, fill::zeros);
-        chiral(0,1) = 1.;
-        chiral(1,0) = 1.;
-    }
+        (*this) = Cliff(1);
     //any other case
     else
+    {
         init_gamma();
+        sort_gamma();
+    }
 }
 
 
@@ -203,10 +140,9 @@ Cliff::Cliff(const Cliff& C)
     dim_gamma = C.get_dim_gamma();
 
 
-    // allocate and copy matrices
-    gamma = new arma::cx_mat [p+q];
+    // copy matrices
     for(int i=0; i<p+q; i++)
-        gamma[i] = C.get_gamma(i);
+        gamma.push_back(C.get_gamma(i));
 
     chiral = C.get_chiral();
 }
@@ -219,22 +155,14 @@ Cliff& Cliff::operator=(const Cliff& C)
     dim_gamma = C.get_dim_gamma();
 
     // delete, reallocate and copy matrices
-    delete [] gamma;
-    gamma = new arma::cx_mat [p+q];
+    gamma.clear();
     for(int i=0; i<p+q; i++)
-        gamma[i] = C.get_gamma(i);
+        gamma.push_back(C.get_gamma(i));
     
     chiral = C.get_chiral();
     
     return *this;
 }
-
-// Destructor
-Cliff::~Cliff()
-{
-    delete [] gamma;
-}
-
 
 void decomp(int p, int q, int* dec)
 {
@@ -299,7 +227,6 @@ void Cliff::init_gamma()
         for(int j=0; j<dec[i]; ++j)
             vec.push_back( Cliff(i) );
     }
-    //std::reverse(vec.begin(), vec.end());
 
     vector<Cliff>::const_iterator begin = vec.begin();
     vector<Cliff>::const_iterator end = vec.end();
@@ -312,13 +239,8 @@ void Cliff::init_gamma()
     for(vector<Cliff>::const_iterator iter = begin+1; iter != end; ++iter)
         C1 *= (*iter);
 
-    dim_gamma = C1.get_dim_gamma(); 
-    gamma = new cx_mat [p+q];
-    for(int i=0; i<p+q; i++)
-        gamma[i] = C1.get_gamma(i);
-    chiral = C1.get_chiral();
+    (*this) = C1;
 
-    sort_gamma();
 }
 
 Cliff& Cliff::operator*=(const Cliff& C2)
@@ -332,21 +254,20 @@ Cliff& Cliff::operator*=(const Cliff& C2)
 
     // temporary variables to avoid overwriting on (*this)
     int p_, q_, dim_gamma_;
-    cx_mat* gamma_;
+    vector<cx_mat> gamma_;
     
     p_ = p + p2;
     q_ = q + q2;
     dim_gamma_ = dim_gamma * dim2;
-    gamma_ = new cx_mat [p_+q_];
     
 
     // start computing product    
     cx_mat id2(dim2, dim2, fill::eye);
 
     for(int i=0; i<p+q; ++i)
-        gamma_[i] = kron( gamma[i], id2 );
+        gamma_.push_back(kron( gamma[i], id2 ));
     for(int i=0; i<p2+q2; ++i)
-        gamma_[p+q+i] = kron( chiral, C2.get_gamma(i) );
+        gamma_.push_back(kron( chiral, C2.get_gamma(i) ));
 
 
     // compute chirality
@@ -364,14 +285,10 @@ Cliff& Cliff::operator*=(const Cliff& C2)
     p = p_;
     q = q_;
     dim_gamma = dim_gamma_;
-    delete [] gamma;
-    gamma = new cx_mat [p+q];
-    for(int i=0; i<p+q; ++i)
-        gamma[i] = gamma_[i];
+    gamma.clear();
+    for(vector<cx_mat>::const_iterator iter = gamma_.begin(); iter != gamma_.end(); ++iter)
+        gamma.push_back((*iter));
 
-
-    // cleanup
-    delete [] gamma_;
 
     return (*this);
 }
@@ -387,21 +304,12 @@ ostream& operator<<(ostream& out, const Cliff& C)
 
 bool hermiticity(const cx_mat& M1, const cx_mat& M2)
 {
-    return(M2.is_hermitian() && !(M1.is_hermitian()));
+    return(!(M2.is_hermitian()) && M1.is_hermitian());
 }
 
 
 void Cliff::sort_gamma()
 {
-    vector<cx_mat> vec;
-
-    for(int i=0; i<p+q; ++i)
-        vec.push_back(gamma[i]);
-
-    sort(vec.begin(), vec.end(), hermiticity);
-
-    vector<cx_mat>::const_iterator begin = vec.begin();
-    vector<cx_mat>::const_iterator end = vec.end();
-    for(vector<cx_mat>::const_iterator iter = begin; iter != end; ++iter)
-        gamma[iter-begin] = (*iter);
+    sort(gamma.begin(), gamma.end(), hermiticity);
 }
+

@@ -2,6 +2,7 @@
 #define CLIFFORD_HPP
 
 #include <armadillo>
+#include <vector>
 
 class Cliff
 {
@@ -13,7 +14,7 @@ class Cliff
         Cliff(int p, int q);
         Cliff(const Cliff& C);
         Cliff& operator=(const Cliff& C);
-        ~Cliff();
+        ~Cliff(){};
         // ============== CONSTRUCTORS, ASSIGNMENT, DESTRUCTOR
 
 
@@ -27,7 +28,7 @@ class Cliff
         int get_p() const { return p; }
         int get_q() const { return q; }
         int get_dim_gamma() const { return dim_gamma; }
-        arma::cx_mat get_gamma(int i) const { return gamma[i]; }
+        arma::cx_mat get_gamma(int i) const { return gamma.at(i); }
         arma::cx_mat get_chiral() const { return chiral; }
         // ============== GET METHODS
 
@@ -45,7 +46,7 @@ class Cliff
 
         int dim_gamma;
 
-        arma::cx_mat* gamma;
+        std::vector<arma::cx_mat> gamma;
         arma::cx_mat chiral;
 
         void init_gamma();
