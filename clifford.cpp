@@ -4,13 +4,7 @@
 #include <algorithm>
 #include "clifford.hpp"
 
-using std::vector;
-using std::istream;
-using std::ostream;
-using std::clog;
-using std::cerr;
-using std::endl;
-
+using namespace std;
 using namespace arma;
 
 // Constructors
@@ -18,7 +12,7 @@ using namespace arma;
 Cliff::Cliff(int mode)
 {
     //(1,0)
-    if(mode==0)
+    if(mode==3)
     {
         p=1;
         q=0;
@@ -29,7 +23,7 @@ Cliff::Cliff(int mode)
         chiral = cx_mat(1, 1, fill::eye);
     }
     //(0,1)
-    else if(mode==1)
+    else if(mode==4)
     {
         p=0;
         q=1;
@@ -42,7 +36,7 @@ Cliff::Cliff(int mode)
         gamma[0](0,0) = z;
     }
     //(2,0)
-    else if(mode==2)
+    else if(mode==0)
     {
         p=2;
         q=0;
@@ -65,7 +59,7 @@ Cliff::Cliff(int mode)
         chiral(1,0) = -z;
     }
     //(1,1)
-    else if(mode==3)
+    else if(mode==2)
     {
         p=1;
         q=1;
@@ -86,7 +80,7 @@ Cliff::Cliff(int mode)
         chiral(1,0) = 1;
     }
     //(0,2)
-    else if(mode==4)
+    else if(mode==1)
     {
         p=0;
         q=2;
@@ -248,48 +242,48 @@ void decomp(int p, int q, int* dec)
     {
         if(!(p%2))
         {
-            dec[2] = p/2;
-            dec[0] = 0;
+            dec[0] = p/2;
+            dec[3] = 0;
         }
         else
         {
-            dec[2] = (p-1)/2;
-            dec[0] = 1;
+            dec[0] = (p-1)/2;
+            dec[3] = 1;
         }
     }
     else
     {
-        dec[2] = 0;
         dec[0] = 0;
+        dec[3] = 0;
     }
 
     if(q)
     {
         if(!(q%2))
         {
-            dec[4] = q/2;
-            dec[1] = 0;
+            dec[1] = q/2;
+            dec[4] = 0;
         }
         else
         {
-            dec[4] = (q-1)/2;
-            dec[1] = 1;
+            dec[1] = (q-1)/2;
+            dec[4] = 1;
         }
     }
     else
     {
-        dec[4] = 0;
         dec[1] = 0;
+        dec[4] = 0;
     }
 
-    if(dec[0] && dec[1])
+    if(dec[3] && dec[4])
     {
-        dec[0] = 0;
-        dec[1] = 0;
-        dec[3] = 1;
+        dec[3] = 0;
+        dec[4] = 0;
+        dec[2] = 1;
     }
     else
-        dec[3] = 0;
+        dec[2] = 0;
 }
 
 
@@ -299,18 +293,19 @@ void Cliff::init_gamma()
     int dec[5];
     decomp(p, q, dec);
 
-
     vector<Cliff> vec;
     for(int i=0; i<5; ++i)
     {
-        Cliff C(i);
         for(int j=0; j<dec[i]; ++j)
-            vec.push_back(C);
+            vec.push_back( Cliff(i) );
     }
-    std::reverse(vec.begin(), vec.end());
+    //std::reverse(vec.begin(), vec.end());
 
     vector<Cliff>::const_iterator begin = vec.begin();
     vector<Cliff>::const_iterator end = vec.end();
+    
+    for(vector<Cliff>::const_iterator iter = begin; iter != end; ++iter)
+        cout << (*iter) << endl;
     
     Cliff C1 = (*begin);
 
@@ -322,6 +317,8 @@ void Cliff::init_gamma()
     for(int i=0; i<p+q; i++)
         gamma[i] = C1.get_gamma(i);
     chiral = C1.get_chiral();
+
+    sort_gamma();
 }
 
 Cliff& Cliff::operator*=(const Cliff& C2)
@@ -349,7 +346,7 @@ Cliff& Cliff::operator*=(const Cliff& C2)
     for(int i=0; i<p+q; ++i)
         gamma_[i] = kron( gamma[i], id2 );
     for(int i=0; i<p2+q2; ++i)
-        gamma[p+q+i] = kron( chiral, C2.get_gamma(i) );
+        gamma_[p+q+i] = kron( chiral, C2.get_gamma(i) );
 
 
     // compute chirality
@@ -358,11 +355,7 @@ Cliff& Cliff::operator*=(const Cliff& C2)
     if((s2 % 8) % 2)
     {
         cx_mat id1(dim_gamma, dim_gamma, fill::eye);
-
-        if(s==2 || s==6)
-            chiral = kron(-id1, C2.get_chiral());
-        else
-            chiral = kron(id1, C2.get_chiral());
+        chiral = kron(id1, C2.get_chiral());
     }
     else
         chiral = kron(chiral, C2.get_chiral());
@@ -392,3 +385,23 @@ ostream& operator<<(ostream& out, const Cliff& C)
     return out;
 }
 
+bool hermiticity(const cx_mat& M1, const cx_mat& M2)
+{
+    return(M2.is_hermitian() && !(M1.is_hermitian()));
+}
+
+
+void Cliff::sort_gamma()
+{
+    vector<cx_mat> vec;
+
+    for(int i=0; i<p+q; ++i)
+        vec.push_back(gamma[i]);
+
+    sort(vec.begin(), vec.end(), hermiticity);
+
+    vector<cx_mat>::const_iterator begin = vec.begin();
+    vector<cx_mat>::const_iterator end = vec.end();
+    for(vector<cx_mat>::const_iterator iter = begin; iter != end; ++iter)
+        gamma[iter-begin] = (*iter);
+}

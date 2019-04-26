@@ -9,28 +9,32 @@ class Cliff
 
 
         // ============== CONSTRUCTORS, ASSIGNMENT, DESTRUCTOR
-
         Cliff(int mode);
         Cliff(int p, int q);
         Cliff(const Cliff& C);
         Cliff& operator=(const Cliff& C);
         ~Cliff();
-
         // ============== CONSTRUCTORS, ASSIGNMENT, DESTRUCTOR
 
+
+        // ============== OPERATORS
         Cliff& operator*=(const Cliff& C);
         friend Cliff operator*(Cliff C1, const Cliff& C2){ C1*=C2; return C1; }
+        // ============== OPERATORS
 
 
         // ============== GET METHODS
-
         int get_p() const { return p; }
         int get_q() const { return q; }
         int get_dim_gamma() const { return dim_gamma; }
         arma::cx_mat get_gamma(int i) const { return gamma[i]; }
         arma::cx_mat get_chiral() const { return chiral; }
-
         // ============== GET METHODS
+
+
+        // ============== OTHER METHODS
+        void sort_gamma();
+        // ============== OTHER METHODS
 
 
 
@@ -52,6 +56,7 @@ class Cliff
 std::ostream& operator<<(std::ostream& out, const Cliff& C);
 
 void decomp(int p, int q, int& dec);
+bool hermiticity(const arma::cx_mat& M1, const arma::cx_mat& M2);
 
 
 #endif
