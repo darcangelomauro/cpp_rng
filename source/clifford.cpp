@@ -271,7 +271,6 @@ Cliff& Cliff::operator*=(const Cliff& C2)
 
 
     // compute chirality
-    int s = (q-p) % 8;
     int s2 = (q2-p2) % 8;
     if((s2 % 8) % 2)
     {

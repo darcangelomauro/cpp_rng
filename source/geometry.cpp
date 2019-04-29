@@ -83,6 +83,12 @@ Geom24::Geom24(const Geom24& G)
         omega[i] = G.get_omega(i);
     }
     
+    int nHL4 = pow(nHL, 4);
+    omega_table_4 = new cx_double [nHL4];
+    for(int i=0; i<nHL4; i++)
+        omega_table_4[i] = G.get_omega_table_4(i);
+
+    
     clog << "Geometry initialized with the following parameters:" << endl;
     clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
 }
@@ -113,6 +119,12 @@ Geom24& Geom24::operator=(const Geom24& G)
         omega[i] = G.get_omega(i);
     }
     
+    delete [] omega_table_4;
+    int nHL4 = pow(nHL, 4);
+    omega_table_4 = new cx_double [nHL4];
+    for(int i=0; i<nHL4; i++)
+        omega_table_4[i] = G.get_omega_table_4(i);
+    
     clog << "Geometry overwritten with the following parameters:" << endl;
     clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
     
@@ -125,6 +137,7 @@ Geom24::~Geom24()
     delete [] mat;
     delete [] eps;
     delete [] omega;
+    delete [] omega_table_4;
 }
 
 
@@ -156,6 +169,11 @@ void Geom24::derived_parameters()
     vector<cx_mat> herm;
     vector<cx_mat> anti;
 
+    for(int i=0; i<p; ++i)
+        herm.push_back(gamma[i]);
+    for(int i=0; i<q; ++i)
+        anti.push_back(cx_double(0, 1)*gamma[p+i]);
+
 	int  count = pow(2, n);
 	// The outer for loop will run 2^n times (the number of all possible subsets).
 	// Here variable i will act as a binary counter
@@ -173,14 +191,15 @@ void Geom24::derived_parameters()
                 vec.push_back(j);
 		}
         
-        // Now print subset if it has odd number of elements
+        // Now calculate and push product if it has odd number of gammas
         int k = vec.size();
-        if(k % 2)
+        if(k % 2 && k != 1)
         {
-            cx_mat M(dim_omega, dim_omega, fill::eye);
-
+            vector<int>::const_iterator begin(vec.begin());
             vector<int>::const_iterator end(vec.end());
-            for(vector<int>::const_iterator iter = vec.begin(); iter != end; ++iter)
+            cx_mat M = gamma.at(*begin);
+
+            for(vector<int>::const_iterator iter = vec.begin() + 1; iter != end; ++iter)
                 M *= gamma.at((*iter));
 
             if(M.is_hermitian())
@@ -200,6 +219,7 @@ void Geom24::derived_parameters()
     for(int i=0; i<nL; ++i)
         omega[nH+i] = anti[i];
 
+    init_omega_table_4();
 }
 
 ostream& operator<<(ostream& out, const Geom24& G)
@@ -218,6 +238,50 @@ void Geom24::shuffle()
     }
 }
 
+void Geom24::init_omega_table_4()
+{
+    omega_table_4 = new cx_double [nHL*nHL*nHL*nHL];
+
+    for(int i=0; i<nHL; ++i)
+    {
+        for(int j=0; j<nHL; ++j)
+        {
+            for(int k=0; k<nHL; ++k)
+            {
+                for(int l=0; l<nHL; ++l)
+                    omega_table_4[l + nHL*(k + nHL*(j + nHL*i))] = trace(omega[i]*omega[j]*omega[k]*omega[l]);
+            }
+        }
+    }
+}
+
+
+
+
+cx_mat Geom24::build_dirac() const
+{
+    // initialize dirac op to zero
+    int dim_dirac = dim*dim*dim_omega;
+    cx_mat dirac(dim_dirac, dim_dirac, fill::zeros);
+
+    static cx_mat id(dim, dim, fill::eye);
+    for(int i=0; i<nHL; ++i)
+    {
+        cx_mat bracket = kron(mat[i], id) + eps[i]*kron(id, mat[i].st());
+        dirac += kron(omega[i], bracket);
+    }
+
+    return dirac;
+}
+
+double Geom24::calculate_S_from_dirac() const
+{
+    cx_mat dirac = build_dirac();
+    cx_mat dirac2 = dirac*dirac;
+    double trdirac2 = trace(dirac2).real();
+    double trdirac4 = trace(dirac2*dirac2).real();
+    return g2*trdirac2 + trdirac4;
+}
 
 double Geom24::dirac2() const
 {
@@ -319,8 +383,7 @@ double Geom24::dirac4() const
 
                     else
                     {
-                        //cx_double cliff = gamma_table4[i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
-                        cx_double cliff = dim_omega;
+                        cx_double cliff = omega_table_4[i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
                         
                         if(cliff.real() != 0. || cliff.imag() != 0.)
                         {
@@ -398,8 +461,7 @@ double Geom24::dirac4() const
             {
                 for(i[0]=0; i[0]<i[3]; i[0]++)
                 {
-                    //cx_double cliff = gamma_table4[i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
-                    cx_double cliff = dim_omega;
+                    cx_double cliff = omega_table_4[i[3] + nHL*(i[2] + nHL*(i[1] + nHL*i[0]))];
                     
                     if(cliff.real() != 0. || cliff.imag() != 0.)
                     {

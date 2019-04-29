@@ -1,4 +1,3 @@
-// g++ main_cliff.cpp geometry.cpp clifford.cpp -o main_cliff -O2 -std=c++11 -larmadillo
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>

@@ -34,22 +34,24 @@ class Geom24
         double get_g2() const {return g2;}
         arma::cx_mat get_mat(int i) const {return mat[i];}
         arma::cx_mat get_omega(int i) const {return omega[i];}
+        arma::cx_double get_omega_table_4(int i) const {return omega_table_4[i];}
         // ============== GET METHODS
 
         
 
         // ============== ACTION METHODS
+        arma::cx_mat build_dirac() const;
         double dirac2() const;
         double dirac4() const;
         double calculate_S() const; // using H and L decomposition
-        double calculate_S_fromD() const; // using whole Dirac operator
+        double calculate_S_from_dirac() const; // using whole Dirac operator
         // ============== ACTION METHODS
         
         
         
         void derived_parameters();
-        void init_gamma();
         void shuffle();
+        void init_omega_table_4();
         std::istream& read_parameters(std::istream& in);
 
 
@@ -93,11 +95,15 @@ class Geom24
 
         // omega matrices (all hermitian)
         arma::cx_mat* omega;   
+
+        // omega 4-product table
+        arma::cx_double* omega_table_4;
         // ============== DERIVED PARAMETERS
         
 };
 
 
 std::ostream& operator<<(std::ostream& out, const Geom24& C);
+
 
 #endif

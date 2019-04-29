@@ -1,15 +1,15 @@
-// g++ main_geom.cpp geometry.cpp clifford.cpp -o main_geom -O2 -std=c++11 -larmadillo
 #include <iostream>
 #include <cstdlib>
 #include "geometry.hpp"
 #include <ctime>
 
+using namespace arma;
 using namespace std;
 
 
 int main()
 {
-    arma::arma_rng::set_seed(time(NULL));
+    arma_rng::set_seed(time(NULL));
 
     Geom24 c1(cin);
 

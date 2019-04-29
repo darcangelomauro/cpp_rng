@@ -1,4 +1,3 @@
-// g++ main_omega.cpp geometry.cpp clifford.cpp -o main_omega -O2 -std=c++11 -larmadillo
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
