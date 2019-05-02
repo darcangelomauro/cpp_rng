@@ -43,7 +43,12 @@ class Geom24
         arma::cx_mat build_dirac() const;
         double dirac2() const;
         double dirac4() const;
+        double dirac4_new() const;
+        double compute_A4(const int&, const int&, const int&, const int&) const;
+        double compute_A2(const int&, const int&) const;
+        double compute_A(const int&) const;
         double calculate_S() const; // using H and L decomposition
+        double calculate_S_new() const; // using H and L decomposition
         double calculate_S_from_dirac() const; // using whole Dirac operator
         // ============== ACTION METHODS
         
@@ -52,6 +57,7 @@ class Geom24
         void derived_parameters();
         void shuffle();
         void init_omega_table_4();
+        void print_omega_table_4() const;
         std::istream& read_parameters(std::istream& in);
 
 
@@ -102,7 +108,7 @@ class Geom24
         
 };
 
-
+std::vector<int> base_conversion(int dec, const int& base, const int& max);
 std::ostream& operator<<(std::ostream& out, const Geom24& C);
 
 
