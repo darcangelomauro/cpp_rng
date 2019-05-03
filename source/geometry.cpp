@@ -541,7 +541,7 @@ double Geom24::dirac4() const
     return res;
 }
 
-cx_mat Geom24::compute_A4(const int& k, const int& i2, const int& i3, const int& i4) const
+cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int& i4) const
 {
     // epsilon factor
     int e = eps[k]*eps[i2]*eps[i3]*eps[i4];
@@ -576,7 +576,7 @@ cx_mat Geom24::compute_A4(const int& k, const int& i2, const int& i3, const int&
             cx_double iu(0,1);
             cx_mat res(dim ,dim, fill::eye);
             res *= -2*eps[k]*tr234;
-            res += dim*iu*(M2M3M4 - M2M3M4.t());
+            res += double(dim)*iu*(M2M3M4 - M2M3M4.t());
             res += eps[i2]*tr2*iu*(M3M4 - M3M4.t());
             res += eps[i3]*tr3*iu*(M2M4 - M2M4.t());
             res += eps[i4]*tr4*iu*(M2M3 - M2M3.t());
@@ -633,7 +633,7 @@ cx_mat Geom24::compute_A4(const int& k, const int& i2, const int& i3, const int&
 }
 
 
-cx_mat Geom24::compute_A2(const int& k, const int& i) const
+cx_mat Geom24::compute_B2(const int& k, const int& i) const
 {
     // clifford product
     double cliff = omega_table_4[i + nHL*(k + nHL*(i + nHL*k))].real();
@@ -680,7 +680,7 @@ cx_mat Geom24::compute_A2(const int& k, const int& i) const
     }
 }
 
-cx_mat Geom24::compute_A(const int& k) const
+cx_mat Geom24::compute_B(const int& k) const
 {
     // base matrix products
     cx_mat M2 = mat[k]*mat[k];
@@ -701,7 +701,7 @@ cx_mat Geom24::compute_A(const int& k) const
 }
 
 
-cx_mat Geom24::der_dirac4(const int& k) const
+cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
 {
     cx_mat res(dim, dim, fill::zeros);
 
@@ -717,7 +717,7 @@ cx_mat Geom24::der_dirac4(const int& k) const
                     {
                         if(i3 != k)
                         {
-                            cx_mat temp = compute_A4(k,i1,i2,i3) + compute_A4(k,i1,i3,i2) + compute_A4(k,i2,i1,i3);
+                            cx_mat temp = compute_B4(k,i1,i2,i3) + compute_A4(k,i1,i3,i2) + compute_A4(k,i2,i1,i3);
                             res += temp + temp.t();
                         }
                     }
@@ -729,12 +729,16 @@ cx_mat Geom24::der_dirac4(const int& k) const
     for(int i=0; i<nHL; ++i)
     {
         if(i != k)
-            res += compute_A2(k,i);
+            res += compute_B2(k,i);
     }
 
-    res += compute_A(k);
+    res += compute_B(k);
 
-    return 4*res;
+    if(herm)
+        return 2*(res+res.t());
+    else
+        return 4*res;
+
 }
 
 

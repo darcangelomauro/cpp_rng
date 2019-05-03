@@ -54,10 +54,10 @@ class Geom24
         
 
         // ============== DERIVATIVE METHODS
-        cx_mat Geom24::compute_A4(const int&, const int&, const int&, const int&) const;
-        cx_mat Geom24::compute_A2(const int&, const int&) const;
-        cx_mat Geom24::compute_A(const int&) const;
-        cx_mat Geom24::der_dirac4(const int&) const;
+        arma::cx_mat compute_B4(const int&, const int&, const int&, const int&) const;
+        arma::cx_mat compute_B2(const int&, const int&) const;
+        arma::cx_mat compute_B(const int&) const;
+        arma::cx_mat der_dirac4(const int&, const bool&) const;
         // ============== DERIVATIVE METHODS
 
         
