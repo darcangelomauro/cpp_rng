@@ -43,15 +43,23 @@ class Geom24
         arma::cx_mat build_dirac() const;
         double dirac2() const;
         double dirac4() const;
-        double dirac4_new() const;
+        double dirac4_old() const; // DEPRECATED
         double compute_A4(const int&, const int&, const int&, const int&) const;
         double compute_A2(const int&, const int&) const;
         double compute_A(const int&) const;
         double calculate_S() const; // using H and L decomposition
-        double calculate_S_new() const; // using H and L decomposition
+        double calculate_S_old() const; // DEPRECATED using H and L decomposition
         double calculate_S_from_dirac() const; // using whole Dirac operator
         // ============== ACTION METHODS
         
+
+        // ============== DERIVATIVE METHODS
+        cx_mat Geom24::compute_A4(const int&, const int&, const int&, const int&) const;
+        cx_mat Geom24::compute_A2(const int&, const int&) const;
+        cx_mat Geom24::compute_A(const int&) const;
+        cx_mat Geom24::der_dirac4(const int&) const;
+        // ============== DERIVATIVE METHODS
+
         
         
         void derived_parameters();
