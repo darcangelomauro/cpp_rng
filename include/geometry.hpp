@@ -2,6 +2,7 @@
 #define GEOMETRY_HPP
 
 #include <armadillo>
+#include <gsl/gsl_rng.h>
 
 #define MAT(i) get_mat(i)
 #define EPS(i) get_eps(i)
@@ -33,6 +34,7 @@ class Geom24
         int get_eps(int i) const {return eps[i];}
         double get_g2() const {return g2;}
         arma::cx_mat get_mat(int i) const {return mat[i];}
+        arma::cx_mat get_mom(int i) const {return mom[i];}
         arma::cx_mat get_omega(int i) const {return omega[i];}
         arma::cx_double get_omega_table_4(int i) const {return omega_table_4[i];}
         // ============== GET METHODS
@@ -61,6 +63,12 @@ class Geom24
         arma::cx_mat der_dirac2(const int&) const;
         // ============== DERIVATIVE METHODS
 
+        // ============== HAMILTONIAN METHODS
+        void sample_mom(gsl_rng*);
+        double calculate_K() const;
+        double calculate_H() const;
+        void leapfrog(const int&, const double&);
+        // ============== HAMILTONIAN METHODS
         
         
         void derived_parameters();
@@ -76,6 +84,9 @@ class Geom24
         // ============== MATRICES
         // H and L matrices (all hermitian)
         arma::cx_mat* mat;   
+        
+        // conjugate momenta
+        arma::cx_mat* mom;
         
         // epsilon: +1 for H, -1 for L
         int* eps;

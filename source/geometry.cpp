@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 #include "geometry.hpp"
 #include "clifford.hpp"
 
@@ -17,6 +19,7 @@ Geom24::Geom24(int p_, int q_, int dim_, double g2_)
 
     // allocate and initialize H and L matrices to identity
     mat = new arma::cx_mat [nHL];
+    mom = new arma::cx_mat [nHL];
     eps = new int [nHL];
     for(int i=0; i<nHL; i++)
     {
@@ -26,6 +29,7 @@ Geom24::Geom24(int p_, int q_, int dim_, double g2_)
             eps[i] = -1;
 
         mat[i].eye(dim, dim); 
+        mom[i].eye(dim, dim); 
     }
 
 
@@ -42,6 +46,7 @@ Geom24::Geom24(istream& in)
 
     // allocate and initialize H and L matrices to identity
     mat = new arma::cx_mat [nHL];
+    mom = new arma::cx_mat [nHL];
     eps = new int [nHL];
     for(int i=0; i<nHL; i++)
     {
@@ -51,6 +56,7 @@ Geom24::Geom24(istream& in)
             eps[i] = -1;
 
         mat[i].eye(dim, dim); 
+        mom[i].eye(dim, dim); 
     }
     
     clog << "Geometry initialized with the following parameters:" << endl;
@@ -74,11 +80,13 @@ Geom24::Geom24(const Geom24& G)
 
     // allocate and copy matrices
     mat = new arma::cx_mat [nHL];
+    mom = new arma::cx_mat [nHL];
     eps = new int [nHL];
     omega = new arma::cx_mat [nHL];
     for(int i=0; i<nHL; i++)
     {
         mat[i] = G.get_mat(i);
+        mom[i] = G.get_mom(i);
         eps[i] = G.get_eps(i);
         omega[i] = G.get_omega(i);
     }
@@ -107,14 +115,17 @@ Geom24& Geom24::operator=(const Geom24& G)
 
     // delete, reallocate and copy matrices
     delete [] mat;
+    delete [] mom;
     delete [] omega;
     delete [] eps;
     mat = new arma::cx_mat [nHL];
+    mom = new arma::cx_mat [nHL];
     eps = new int [nHL];
     omega = new arma::cx_mat [nHL];
     for(int i=0; i<nHL; i++)
     {
         mat[i] = G.get_mat(i);
+        mom[i] = G.get_mat(i);
         eps[i] = G.get_eps(i);
         omega[i] = G.get_omega(i);
     }
@@ -135,6 +146,7 @@ Geom24& Geom24::operator=(const Geom24& G)
 Geom24::~Geom24()
 {
     delete [] mat;
+    delete [] mom;
     delete [] eps;
     delete [] omega;
     delete [] omega_table_4;
@@ -233,8 +245,8 @@ void Geom24::shuffle()
 {
     for(int i=0; i<nHL; i++)
     {
-        arma::cx_mat temp(dim, dim, arma::fill::randu);
-        mat[i] = temp + temp.t();
+        arma::cx_mat temp(dim, dim, arma::fill::randn);
+        mat[i] = (temp + temp.t())/(2*dim*dim);
     }
 }
 
@@ -540,6 +552,53 @@ double Geom24::dirac4() const
 
     return res;
 }
+
+
+void Geom24::sample_mom(gsl_rng* engine)
+{
+    for(int i=0; i<nHL; ++i)
+    {
+        cx_mat temp(dim, dim);
+        temp.imbue( [&engine](){ return cx_double(gsl_ran_gaussian(engine, 1.), gsl_ran_gaussian(engine, 1.)); } );
+
+        mom[i] = (temp+temp.t())/2.;
+    }
+}
+
+double Geom24::calculate_K() const
+{
+    double res = 0;
+
+    for(int i=0; i<nHL; ++i)
+        res += trace(mom[i]*mom[i]).real();
+
+    return res/2.;
+}
+
+double Geom24::calculate_H() const
+{
+    return calculate_S() + calculate_K();
+}
+
+void Geom24::leapfrog(const int& Nt, const double& dt)
+{
+    for(int i=0; i<nHL; ++i)
+    {
+        mat[i] += (dt/2.)*mom[i];
+
+        for(int j=0; j<Nt-1; ++j)
+        {
+            mom[i] += -dt*der_dirac4(i, true);
+            mat[i] += dt*mom[i];
+        }
+
+        mom[i] += -dt*der_dirac4(i, true);
+        mat[i] += (dt/2.)*mom[i];
+    }
+}
+
+
+
 
 cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int& i4, const double& cliff, const bool& neg) const
 {

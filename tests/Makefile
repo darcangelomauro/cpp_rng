@@ -19,7 +19,7 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = test_dirac test_cliff test_geom test_omega test_omega_table test_derivative
+MAIN = test_dirac test_cliff test_geom test_omega test_omega_table test_derivative test_mom test_leapfrog
 
 SOURCE = clifford geometry 
 
