@@ -29,9 +29,16 @@ int main()
         clock_t start2 = clock();
         cx_mat der1 = G.der_dirac4(i, 1);
         clock_t end = clock();
-        cout << "dD4/dM (0) " << i << ": " << der0.is_hermitian() << "    time: " << (double)(start2-start1)/(double)CLOCKS_PER_SEC << endl;
-        cout << "dD4/dM (1) " << i << ": " << der1.is_hermitian() << "    time: " << (double)(end-start2)/(double)CLOCKS_PER_SEC << endl;
+        cout << "dD4/dM" << i << " (0): " << der0.is_hermitian() << "    time: " << (double)(start2-start1)/(double)CLOCKS_PER_SEC << endl;
+        cout << "dD4/dM" << i << " (1): " << der1.is_hermitian() << "    time: " << (double)(end-start2)/(double)CLOCKS_PER_SEC << endl;
         cout << "equal up to " << diff << "?: " << approx_equal(der0, der1, "absdiff", diff) << endl; 
+    }
+    for(int i=0; i<G.get_nHL(); ++i)
+    {
+        clock_t start1 = clock();
+        cx_mat der2 = G.der_dirac2(i);
+        clock_t end = clock();
+        cout << "dD2/dM " << i << ": " << der2.is_hermitian() << "    time: " << (double)(end-start1)/(double)CLOCKS_PER_SEC << endl;
     }
 
     return 0;

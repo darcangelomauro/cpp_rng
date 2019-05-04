@@ -541,94 +541,62 @@ double Geom24::dirac4() const
     return res;
 }
 
-cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int& i4) const
+cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int& i4, const double& cliff, const bool& neg) const
 {
-    // epsilon factor
-    int e = eps[k]*eps[i2]*eps[i3]*eps[i4];
-
-    // If e=-1, then [1-|] applied to a matrix
-    // returns a anti-hermitian matrix.
-    // On the other hand the clifford part is
-    // guaranteed to be pure imaginary, so
-    // just take the i from cliff and put it
-    // in the anti-hermitian matrix to get a
-    // hermitian one
-    if(e<0)
+    if(neg)
     {
-        // clifford product
-        double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*k))].imag(); 
+        // base matrix products
+        cx_mat M2M3 = mat[i2]*mat[i3];
+        cx_mat M2M4 = mat[i2]*mat[i4];
+        cx_mat M3M4 = mat[i3]*mat[i4];
+        cx_mat M2M3M4 = M2M3*mat[i4];
 
-        if(cliff != 0.)
-        {
-            // base matrix products
-            cx_mat M2M3 = mat[i2]*mat[i3];
-            cx_mat M2M4 = mat[i2]*mat[i4];
-            cx_mat M3M4 = mat[i3]*mat[i4];
-            cx_mat M2M3M4 = M2M3*mat[i4];
+        // traces
+        double tr234 = trace(M2M3M4).imag();
+        double tr2 = trace(mat[i2]).real();
+        double tr3 = trace(mat[i3]).real();
+        double tr4 = trace(mat[i4]).real();
 
-            // traces
-            double tr234 = trace(M2M3M4).imag();
-            double tr2 = trace(mat[i2]).real();
-            double tr3 = trace(mat[i3]).real();
-            double tr4 = trace(mat[i4]).real();
+        // compute sum
+        cx_double iu(0,1);
+        cx_mat res(dim ,dim, fill::eye);
+        res *= -2*eps[k]*tr234;
+        res += double(dim)*iu*(M2M3M4 - M2M3M4.t());
+        res += eps[i2]*tr2*iu*(M3M4 - M3M4.t());
+        res += eps[i3]*tr3*iu*(M2M4 - M2M4.t());
+        res += eps[i4]*tr4*iu*(M2M3 - M2M3.t());
 
-            // compute sum
-            cx_double iu(0,1);
-            cx_mat res(dim ,dim, fill::eye);
-            res *= -2*eps[k]*tr234;
-            res += double(dim)*iu*(M2M3M4 - M2M3M4.t());
-            res += eps[i2]*tr2*iu*(M3M4 - M3M4.t());
-            res += eps[i3]*tr3*iu*(M2M4 - M2M4.t());
-            res += eps[i4]*tr4*iu*(M2M3 - M2M3.t());
-
-            return cliff*res.st();
-        }
-        else
-        {
-            cx_mat res(dim, dim, fill::zeros);
-            return res;
-        }
+        return cliff*res.st();
     }
     else
     {
-        // clifford product
-        double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*k))].real(); 
+        // base matrix products
+        cx_mat M2M3 = mat[i2]*mat[i3];
+        cx_mat M2M4 = mat[i2]*mat[i4];
+        cx_mat M3M4 = mat[i3]*mat[i4];
+        cx_mat M2M3M4 = M2M3*mat[i4];
 
-        if(cliff != 0.)
-        {
-            // base matrix products
-            cx_mat M2M3 = mat[i2]*mat[i3];
-            cx_mat M2M4 = mat[i2]*mat[i4];
-            cx_mat M3M4 = mat[i3]*mat[i4];
-            cx_mat M2M3M4 = M2M3*mat[i4];
+        // traces
+        double tr234 = trace(M2M3M4).real();
+        double tr23 = trace(M2M3).real();
+        double tr24 = trace(M2M4).real();
+        double tr34 = trace(M3M4).real();
+        double tr2 = trace(mat[i2]).real();
+        double tr3 = trace(mat[i3]).real();
+        double tr4 = trace(mat[i4]).real();
 
-            // traces
-            double tr234 = trace(M2M3M4).real();
-            double tr23 = trace(M2M3).real();
-            double tr24 = trace(M2M4).real();
-            double tr34 = trace(M3M4).real();
-            double tr2 = trace(mat[i2]).real();
-            double tr3 = trace(mat[i3]).real();
-            double tr4 = trace(mat[i4]).real();
+        // compute sum
+        cx_mat res(dim ,dim, fill::eye);
+        res *= 2*eps[k]*tr234;
+        res += dim*(M2M3M4 + M2M3M4.t());
+        res += eps[i2]*tr2*(M3M4 + M3M4.t());
+        res += eps[i3]*tr3*(M2M4 + M2M4.t());
+        res += eps[i4]*tr4*(M2M3 + M2M3.t());
+        res += 2*eps[k]*eps[i2]*tr34*mat[i2];
+        res += 2*eps[k]*eps[i3]*tr24*mat[i3];
+        res += 2*eps[k]*eps[i4]*tr23*mat[i4];
 
-            // compute sum
-            cx_mat res(dim ,dim, fill::eye);
-            res *= 2*eps[k]*tr234;
-            res += dim*(M2M3M4 + M2M3M4.t());
-            res += eps[i2]*tr2*(M3M4 + M3M4.t());
-            res += eps[i3]*tr3*(M2M4 + M2M4.t());
-            res += eps[i4]*tr4*(M2M3 + M2M3.t());
-            res += 2*eps[k]*eps[i2]*tr34*mat[i2];
-            res += 2*eps[k]*eps[i3]*tr24*mat[i3];
-            res += 2*eps[k]*eps[i4]*tr23*mat[i4];
-
-            return cliff*res.st();
-        }
-        else
-        {
-            cx_mat res(dim, dim, fill::zeros);
-            return res;
-        }
+        return cliff*res.st();
     }
 }
 
@@ -704,7 +672,8 @@ cx_mat Geom24::compute_B(const int& k) const
 cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
 {
     cx_mat res(dim, dim, fill::zeros);
-
+    
+    // four distinct indices
     for(int i1=0; i1<nHL; ++i1)
     {
         if(i1 != k)
@@ -717,8 +686,31 @@ cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
                     {
                         if(i3 != k)
                         {
-                            cx_mat temp = compute_B4(k,i1,i2,i3) + compute_A4(k,i1,i3,i2) + compute_A4(k,i2,i1,i3);
-                            res += temp + temp.t();
+                            // epsilon factor
+                            int e = eps[k]*eps[i1]*eps[i2]*eps[i3];
+
+                            if(e<0)
+                            {
+                                // clifford product
+                                double cliff = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].imag(); 
+
+                                if(cliff != 0.)
+                                {
+                                    cx_mat temp = compute_B4(k,i1,i2,i3, cliff, true) + compute_B4(k,i1,i3,i2, cliff, true) + compute_B4(k,i2,i1,i3, cliff, true);
+                                    res += temp + temp.t();
+                                }
+                            }
+                            else
+                            {
+                                // clifford product
+                                double cliff = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].real(); 
+
+                                if(cliff != 0.)
+                                {
+                                    cx_mat temp = compute_B4(k,i1,i2,i3, cliff, false) + compute_B4(k,i1,i3,i2, cliff, false) + compute_B4(k,i2,i1,i3, cliff, false);
+                                    res += temp + temp.t();
+                                }
+                            }
                         }
                     }
                 }
@@ -726,13 +718,16 @@ cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
         }
     }
 
+    // two distinct pairs of equal indices
     for(int i=0; i<nHL; ++i)
     {
         if(i != k)
             res += compute_B2(k,i);
     }
 
+    // all indices equal
     res += compute_B(k);
+
 
     if(herm)
         return 2*(res+res.t());
@@ -743,8 +738,15 @@ cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
 
 
 
-    
+cx_mat Geom24::der_dirac2(const int& k) const
+{
+    cx_mat res(dim, dim, fill::eye);
 
+    res *= eps[k]*trace(mat[k]).real();
+    res += dim*mat[k].st();
+
+    return 4*dim_omega*res;
+}
 
 
 
