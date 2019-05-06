@@ -61,6 +61,7 @@ class Geom24
         arma::cx_mat compute_B(const int&) const;
         arma::cx_mat der_dirac4(const int&, const bool&) const;
         arma::cx_mat der_dirac2(const int&) const;
+        arma::cx_mat der_dirac24(const int&, const bool&) const;
         // ============== DERIVATIVE METHODS
 
         // ============== HAMILTONIAN METHODS
@@ -68,11 +69,13 @@ class Geom24
         double calculate_K() const;
         double calculate_H() const;
         void leapfrog(const int&, const double&);
+        double HMC(const int&, const double&, const int&, gsl_rng*, std::ofstream&);
         // ============== HAMILTONIAN METHODS
         
         
         void derived_parameters();
         void shuffle();
+        void reverse_mom();
         void init_omega_table_4();
         void print_omega_table_4() const;
         std::istream& read_parameters(std::istream& in);

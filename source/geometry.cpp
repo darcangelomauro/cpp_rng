@@ -250,6 +250,12 @@ void Geom24::shuffle()
     }
 }
 
+void Geom24::reverse_mom()
+{
+    for(int i=0; i<nHL; ++i)
+        mom[i] *= -1.;
+}
+
 void Geom24::init_omega_table_4()
 {
     omega_table_4 = new cx_double [nHL*nHL*nHL*nHL];
@@ -562,6 +568,26 @@ void Geom24::sample_mom(gsl_rng* engine)
         temp.imbue( [&engine](){ return cx_double(gsl_ran_gaussian(engine, 1.), gsl_ran_gaussian(engine, 1.)); } );
 
         mom[i] = (temp+temp.t())/2.;
+
+        /*
+        for(int j=0; j<dim; ++j)
+        {
+            for(int k=j+1; k<dim; ++k)
+            {
+                double x = gsl_ran_gaussian(engine, 1.)/sqrt(2.);
+                double y = gsl_ran_gaussian(engine, 1.)/sqrt(2.);
+
+                mom[i](j,k) = cx_double(x,y);
+                mom[i](k,j) = cx_double(x,-y);
+            }
+        }
+
+        for(int j=0; j<dim; ++j)
+        {
+            double x = gsl_ran_gaussian(engine, 1.);
+            mom[i](j,j) = cx_double(x, 0.);
+        }
+        */
     }
 }
 
@@ -583,19 +609,79 @@ double Geom24::calculate_H() const
 void Geom24::leapfrog(const int& Nt, const double& dt)
 {
     for(int i=0; i<nHL; ++i)
+        mat[i] += (dt/2.)*mom[i].st();
+
+    for(int j=0; j<Nt-1; ++j)
     {
-        mat[i] += (dt/2.)*mom[i];
-
-        for(int j=0; j<Nt-1; ++j)
+        for(int i=0; i<nHL; ++i)
         {
-            mom[i] += -dt*der_dirac4(i, true);
-            mat[i] += dt*mom[i];
+            mom[i] += -dt*der_dirac24(i, true);
+            mat[i] += dt*mom[i].st();
         }
-
-        mom[i] += -dt*der_dirac4(i, true);
-        mat[i] += (dt/2.)*mom[i];
+    }
+    
+    for(int i=0; i<nHL; ++i)
+    {
+        mom[i] += -dt*der_dirac24(i, true);
+        mat[i] += (dt/2.)*mom[i].st();
     }
 }
+
+
+double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* engine, ofstream& out)
+{
+    double ar =0;
+
+    // iter repetitions of leapfrog
+    for(int i=0; i<iter; ++i)
+    {
+        sample_mom(engine);
+
+        // store previous configuration
+        cx_mat* mat_bk = new cx_mat [nHL];
+        for(int j=0; j<nHL; j++)
+            mat_bk[j] = mat[j];
+
+        // initial hamiltonian
+        double Si = calculate_S();
+        double Ki = calculate_K();
+        double Hi = Si+Ki;
+
+        // leapfrog
+        leapfrog(Nt, dt);
+
+        // final hamiltonian
+        double Sf = calculate_S();
+        double Kf = calculate_K();
+        double Hf = Sf+Kf;
+
+        // metropolis test
+        if(Hf > Hi)
+        {
+            double r = gsl_rng_uniform(engine);
+            double e = exp(Hi-Hf);
+
+            if(r > e)
+            {
+                for(int j=0; j<nHL; ++j)
+                    mat[j] = mat_bk[j];
+            }
+            else
+                ++ar;
+        }
+        else
+            ++ar;
+    
+        out << Sf << " " << Kf << " " << Hf << endl; 
+    
+    }
+
+    return ar/iter;
+}
+
+
+    
+
 
 
 
@@ -727,6 +813,132 @@ cx_mat Geom24::compute_B(const int& k) const
     return 2*dim_omega*res.st();
 }
 
+/*
+cx_mat Geom24::der_dirac4_new(const int& k, const bool& herm) const
+{
+    cx_mat res(dim, dim, fill::zeros);
+    
+    // four distinct indices
+    for(int i1=0; i1<nHL; ++i1)
+    {
+        for(int i2=i1+1; i2<nHL; ++i2)
+        {
+            for(int i3=i2+1; i3<nHL; ++i3)
+            {
+                for(int i4=i3+1; i4<nHL; ++i4)
+                {
+                    if(i1==k)
+                    {
+                        // epsilon factor
+                        int e = eps[i1]*eps[i2]*eps[i3]*eps[i4];
+
+                        if(e<0)
+                        {
+                            // clifford product
+                            double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*i1))].imag(); 
+
+                            if(cliff != 0.)
+                            {
+                                cx_mat temp = compute_B4(i1,i2,i3,i4, cliff, true) + compute_B4(i1,i2,i4,i3, cliff, true) + compute_B4(i1,i3,i2,i4, cliff, true);
+                                res += temp + temp.t();
+                            }
+                        }
+                        else
+                        {
+                            // clifford product
+                            double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*i1))].real(); 
+
+                            if(cliff != 0.)
+                            {
+                                cx_mat temp = compute_B4(i1,i2,i3,i4, cliff, false) + compute_B4(i1,i2,i4,i3, cliff, false) + compute_B4(i1,i3,i2,i4, cliff, false);
+                                res += temp + temp.t();
+                            }
+                        }
+                    }
+                    else if(i2==k)
+                    {
+                        // epsilon factor
+                        int e = eps[i1]*eps[i2]*eps[i3]*eps[i4];
+
+                        if(e<0)
+                        {
+                            // clifford product
+                            double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*i1))].imag(); 
+
+                            if(cliff != 0.)
+                            {
+                                cx_mat temp = compute_B4(i2,i3,i4,i1, cliff, true) + compute_B4(i2,i4,i3,i1, cliff, true) + compute_B4(i2,i4,i1,i3, cliff, true);
+                                res += temp + temp.t();
+                            }
+                        }
+                        else
+                        {
+                            // clifford product
+                            double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*i1))].real(); 
+
+                            if(cliff != 0.)
+                            {
+                                cx_mat temp = compute_B4(i2,i3,i4,i1, cliff, false) + compute_B4(i2,i4,i3,i1, cliff, false) + compute_B4(i2,i4,i1,i3, cliff, false);
+                                res += temp + temp.t();
+                            }
+                        }
+                    }
+                    else if(i3==k)
+                    {
+                        // epsilon factor
+                        int e = eps[i1]*eps[i2]*eps[i3]*eps[i4];
+
+                        if(e<0)
+                        {
+                            // clifford product
+                            double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*i1))].imag(); 
+
+                            if(cliff != 0.)
+                            {
+                                cx_mat temp = compute_B4(i2,i3,i4,i1, cliff, true) + compute_B4(i2,i4,i3,i1, cliff, true) + compute_B4(i2,i4,i1,i3, cliff, true);
+                                res += temp + temp.t();
+                            }
+                        }
+                        else
+                        {
+                            // clifford product
+                            double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*i1))].real(); 
+
+                            if(cliff != 0.)
+                            {
+                                cx_mat temp = compute_B4(i2,i3,i4,i1, cliff, false) + compute_B4(i2,i4,i3,i1, cliff, false) + compute_B4(i2,i4,i1,i3, cliff, false);
+                                res += temp + temp.t();
+                            }
+                        }
+                    }
+                    else if(i4==k)
+                    {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // two distinct pairs of equal indices
+    for(int i=0; i<nHL; ++i)
+    {
+        if(i != k)
+            res += compute_B2(k,i);
+    }
+
+    // all indices equal
+    res += compute_B(k);
+
+
+    if(herm)
+        return 2*(res+res.t());
+    else
+        return 4*res;
+
+}
+*/
+
 
 cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
 {
@@ -751,22 +963,26 @@ cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
                             if(e<0)
                             {
                                 // clifford product
-                                double cliff = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].imag(); 
+                                double cliff1 = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].imag(); 
+                                double cliff2 = omega_table_4[i2 + nHL*(i3 + nHL*(i1 + nHL*k))].imag(); 
+                                double cliff3 = omega_table_4[i3 + nHL*(i1 + nHL*(i2 + nHL*k))].imag(); 
 
-                                if(cliff != 0.)
+                                if(cliff1 != 0.)
                                 {
-                                    cx_mat temp = compute_B4(k,i1,i2,i3, cliff, true) + compute_B4(k,i1,i3,i2, cliff, true) + compute_B4(k,i2,i1,i3, cliff, true);
+                                    cx_mat temp = compute_B4(k,i1,i2,i3, cliff1, true) + compute_B4(k,i1,i3,i2, cliff2, true) + compute_B4(k,i2,i1,i3, cliff3, true);
                                     res += temp + temp.t();
                                 }
                             }
                             else
                             {
                                 // clifford product
-                                double cliff = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].real(); 
+                                double cliff1 = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].real(); 
+                                double cliff2 = omega_table_4[i2 + nHL*(i3 + nHL*(i1 + nHL*k))].real(); 
+                                double cliff3 = omega_table_4[i3 + nHL*(i1 + nHL*(i2 + nHL*k))].real(); 
 
-                                if(cliff != 0.)
+                                if(cliff1 != 0.)
                                 {
-                                    cx_mat temp = compute_B4(k,i1,i2,i3, cliff, false) + compute_B4(k,i1,i3,i2, cliff, false) + compute_B4(k,i2,i1,i3, cliff, false);
+                                    cx_mat temp = compute_B4(k,i1,i2,i3, cliff1, false) + compute_B4(k,i1,i3,i2, cliff2, false) + compute_B4(k,i2,i1,i3, cliff3, false);
                                     res += temp + temp.t();
                                 }
                             }
@@ -807,7 +1023,10 @@ cx_mat Geom24::der_dirac2(const int& k) const
     return 4*dim_omega*res;
 }
 
-
+cx_mat Geom24::der_dirac24(const int& k, const bool& herm) const
+{
+    return g2*der_dirac2(k) + der_dirac4(k, herm);
+}
 
 
 // old function for trD4
