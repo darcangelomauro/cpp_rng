@@ -18,12 +18,15 @@ int main()
     arma_rng::set_seed(111111);
 
     // create geometry from input
-    Geom24 G(2, 0, 20, -1.5);
+    Geom24 G(0, 3, 20, -2.5);
     
-    ofstream out;
-    out.open("base.txt");
-    double ar = G.HMC(1000, 0.0005, 100, engine, out);
-    out.close();
+    ofstream out_s;
+    out_s.open("base_s.txt");
+    ofstream out_hl;
+    out_hl.open("base_hl.txt");
+    double ar = G.HMC(100, 0.0001, 100, engine, out_s, out_hl);
+    out_s.close();
+    out_hl.close();
 
     cout << "acceptance rate: " << ar << endl;
 

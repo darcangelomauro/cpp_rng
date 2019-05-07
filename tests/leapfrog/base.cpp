@@ -19,7 +19,7 @@ int main()
     //const double L = 1;
 
     // create geometry from input
-    Geom24 G(2, 0, 20, -2.2431);
+    Geom24 G(1, 3, 20, -2.5);
     
     //G.shuffle();
     G.sample_mom(engine);
@@ -27,7 +27,7 @@ int main()
     double Si = G.calculate_S();
     double Ki = G.calculate_K();
     clock_t start1 = clock();
-    G.leapfrog(1000, 0.000001);
+    G.leapfrog(100, 0.0001);
     clock_t end = clock();
     double Sf = G.calculate_S();
     double Kf = G.calculate_K();
