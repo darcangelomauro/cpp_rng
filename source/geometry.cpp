@@ -250,6 +250,33 @@ void Geom24::shuffle()
     }
 }
 
+istream& Geom24::read_mat(istream& in)
+{
+    if(in)
+    {
+        // loop on matrices
+        for(int i=0; i<nHL; ++i)
+        {
+            // loop on indices
+            for(int j=0; j<dim; ++j)
+            {
+                for(int k=0; k<dim; ++k)
+                {
+                    double x, y;
+                    in >> x >> y;
+                    mat[i](j,k) = cx_double(x, y);
+                }
+            }
+        }
+         
+        // clear input stream state
+        in.clear();
+    }
+
+    return in;
+}
+
+
 void Geom24::reverse_mom()
 {
     for(int i=0; i<nHL; ++i)
@@ -628,9 +655,12 @@ void Geom24::leapfrog(const int& Nt, const double& dt)
 }
 
 
-double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* engine, ofstream& out)
+double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
     double ar =0;
+
+    double Si, Ki, Hi;
+    double Sf, Kf, Hf;
 
     // iter repetitions of leapfrog
     for(int i=0; i<iter; ++i)
@@ -642,18 +672,23 @@ double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* en
         for(int j=0; j<nHL; j++)
             mat_bk[j] = mat[j];
 
-        // initial hamiltonian
-        double Si = calculate_S();
-        double Ki = calculate_K();
-        double Hi = Si+Ki;
+        // set potential to previous final value,
+        // unless it's the first iteration
+        if(i)
+            Si = Sf;
+        else
+            Si = calculate_S();
+
+        Ki = calculate_K();
+        Hi = Si+Ki;
 
         // leapfrog
         leapfrog(Nt, dt);
 
         // final hamiltonian
-        double Sf = calculate_S();
-        double Kf = calculate_K();
-        double Hf = Sf+Kf;
+        Sf = calculate_S();
+        Kf = calculate_K();
+        Hf = Sf+Kf;
 
         // metropolis test
         if(Hf > Hi)
@@ -663,17 +698,35 @@ double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* en
 
             if(r > e)
             {
+                // restore old configuration
                 for(int j=0; j<nHL; ++j)
+                {
                     mat[j] = mat_bk[j];
+                    Sf = Si;
+                    Kf = Ki;
+                    Hf = Hi;
+                }
             }
-            else
-                ++ar;
+            else ++ar;
         }
-        else
-            ++ar;
+        else ++ar;
     
-        out << Sf << " " << Kf << " " << Hf << endl; 
-    
+        // print S, K, H
+        out_s << Sf << " " << Kf << " " << Hf << endl; 
+
+        // print mat
+        for(int j=0; j<nHL; ++j)
+        {
+            for(int k=0; k<dim; ++k)
+            {
+                for(int l=0; l<dim; ++l)
+                    out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+            }
+            out_hl << endl;
+        }
+
+
+        delete [] mat_bk;
     }
 
     return ar/iter;

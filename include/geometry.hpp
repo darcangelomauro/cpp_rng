@@ -69,12 +69,13 @@ class Geom24
         double calculate_K() const;
         double calculate_H() const;
         void leapfrog(const int&, const double&);
-        double HMC(const int&, const double&, const int&, gsl_rng*, std::ofstream&);
+        double HMC(const int&, const double&, const int&, gsl_rng*, std::ostream&, std::ostream&);
         // ============== HAMILTONIAN METHODS
         
         
         void derived_parameters();
         void shuffle();
+        std::istream& read_mat(std::istream& in);
         void reverse_mom();
         void init_omega_table_4();
         void print_omega_table_4() const;

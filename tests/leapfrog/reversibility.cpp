@@ -17,9 +17,9 @@ int main()
     arma_rng::set_seed(111111);
 
     // create geometry from input
-    Geom24 G(4, 0, 10, -2.2431);
+    Geom24 G(2, 0, 20, -1.5);
     
-    G.shuffle();
+    //G.shuffle();
     G.sample_mom(engine);
     
     double Si = G.calculate_S();

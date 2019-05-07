@@ -17,18 +17,18 @@ int main()
     gsl_rng_set(engine, time(NULL));
     arma_rng::set_seed(time(NULL)+10);
 
-    const double L = 0.1;
+    const double L = 0.01;
 
     // create geometry from input
     Geom24 G(2, 0, 10, -2.2431);
     
-    double tau = 0.01;
+    double tau = 0.00001;
 
     ofstream out;
     out.open("quadratic.txt");
     out.precision(16);
 
-    while(tau > 0.0001)
+    while(tau >= 0.000001)
     {
         G.shuffle();
         G.sample_mom(engine);
