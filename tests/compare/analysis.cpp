@@ -25,8 +25,10 @@ int main(int argc, char** argv)
     
     if(in_data.is_open())
     {
-        ofstream out;
-        out.open(argv1 + "_varG.txt");
+        ofstream out_s;
+        out_s.open(argv1 + "_S_varG.txt");
+        ofstream out_f;
+        out_f.open(argv1 + "_F_varG.txt");
         
         int idx;
         int p, q, dim;
@@ -37,6 +39,8 @@ int main(int argc, char** argv)
             string filename_s = argv1 + "_simS_" + to_string(idx) + ".txt";
             ifstream in_s;
             in_s.open(filename_s);
+            
+            vector<double>::size_type Nsw;
             if(in_s.is_open())
             {
                 vector<double> sval;
@@ -45,26 +49,65 @@ int main(int argc, char** argv)
                     sval.push_back(s);
                 in_s.close();
 
-                vector<double>::size_type size = sval.size();
+                Nsw = sval.size();
                 vector<double>::const_iterator begin(sval.begin());
                 vector<double>::const_iterator end(sval.end());
 
-                out << g << " " << accumulate(begin+size/2, end, 0.0)/(size/2) << endl;
+                out_s << g << " " << accumulate(begin+Nsw/2, end, 0.0)/(Nsw/2) << endl;
             }
             else
             {
                 cout << "File " << filename_s << " not found. Quitting" << endl;
                 return 1;
             }
-        }
+            in_s.close();
 
-        out.close();
+            // matrix related operations
+            string filename_hl = argv1 + "_simHL_" + to_string(idx) + ".txt";
+            ifstream in_hl;
+            in_hl.open(filename_hl);
+            if(in_hl.is_open())
+            {
+                vector<double> fval;
+                for(unsigned i=0; i<Nsw; ++i)
+                {
+                    Geom24 G(p, q, dim, g);
+                    G.read_mat(in_hl);
+
+                    double f = 0;
+                    double den = 0;
+                    for(int j=0; j<p; ++j)
+                    {
+                        double trH = trace(G.get_mat(j)).real();
+                        double trH2 = trace(G.get_mat(j)*G.get_mat(j)).real();
+                        f += trH*trH;
+                        den += trH2;
+                    }
+                    fval.push_back(f/(dim*den));
+                
+                }
+                vector<double>::const_iterator begin(fval.begin());
+                vector<double>::const_iterator end(fval.end());
+
+                out_f << g << " " << accumulate(begin+Nsw/2, end, 0.0)/(Nsw/2) << endl;
+            }
+            else
+            {
+                cout << "File " << filename_hl << " not found. Quitting" << endl;
+                return 1;
+            }
+            in_hl.close();
+        }
+        out_s.close();
+        out_f.close();
+
     }
     else
     {
         cout << "File " << filename_data << " not found. Quitting" << endl;
         return 1;
     }
+    in_data.close();
 
 
 
