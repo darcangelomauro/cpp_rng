@@ -19,7 +19,7 @@ int main()
     //const double L = 1;
 
     // create geometry from input
-    Geom24 G(1, 3, 20, -2.5);
+    Geom24 G(1, 1, 20, -2.5);
     
     //G.shuffle();
     G.sample_mom(engine);

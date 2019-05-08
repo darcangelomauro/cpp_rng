@@ -19,7 +19,7 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = base quadratic reversibility
+MAIN = base quadratic reversibility env
 
 SOURCE = clifford geometry 
 
