@@ -657,7 +657,7 @@ void Geom24::leapfrog(const int& Nt, const double& dt)
 
 double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
-    double ar =0;
+    double ar = 0;
 
     double Si, Ki, Hi;
     double Sf, Kf, Hf;
@@ -730,6 +730,102 @@ double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* en
     }
 
     return ar/iter;
+}
+
+
+double Geom24::dual_averaging(const int& Nt, double& dt, const int& iter, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+{
+    // dual averaging variables
+    double Stat = 0;
+    double mu = log(10*dt);
+    double shr = 0.05;
+    int i0 = 10;
+    double kappa = 0.75;
+    double log_dt_avg = log(dt);
+
+
+    double Si, Ki, Hi;
+    double Sf, Kf, Hf;
+
+    // iter repetitions of leapfrog
+    for(int i=0; i<iter; ++i)
+    {
+        sample_mom(engine);
+
+        // store previous configuration
+        cx_mat* mat_bk = new cx_mat [nHL];
+        for(int j=0; j<nHL; j++)
+            mat_bk[j] = mat[j];
+
+        // set potential to previous final value,
+        // unless it's the first iteration
+        if(i)
+            Si = Sf;
+        else
+            Si = calculate_S();
+
+        Ki = calculate_K();
+        Hi = Si+Ki;
+
+        // leapfrog
+        leapfrog(Nt, dt);
+
+        // final hamiltonian
+        Sf = calculate_S();
+        Kf = calculate_K();
+        Hf = Sf+Kf;
+
+        // metropolis test
+        if(Hf > Hi)
+        {
+            double r = gsl_rng_uniform(engine);
+            double e = exp(Hi-Hf);
+
+            Stat += 0.65-e;
+
+            if(r > e)
+            {
+                // restore old configuration
+                for(int j=0; j<nHL; ++j)
+                {
+                    mat[j] = mat_bk[j];
+                    Sf = Si;
+                    Kf = Ki;
+                    Hf = Hi;
+                }
+            }
+        }
+        else Stat += 0.65-1;
+
+        
+        // dual averaging
+        double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+        dt = exp(log_dt);
+        double eta = pow(i+1, -kappa);
+        log_dt_avg = eta*log_dt + (1-eta)*log_dt_avg;
+
+
+    
+        // print S, K, H
+        out_s << Sf << " " << Kf << " " << Hf << endl; 
+
+        // print mat
+        for(int j=0; j<nHL; ++j)
+        {
+            for(int k=0; k<dim; ++k)
+            {
+                for(int l=0; l<dim; ++l)
+                    out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+            }
+            out_hl << endl;
+        }
+
+
+        delete [] mat_bk;
+    }
+
+
+    return exp(log_dt_avg);
 }
 
 
