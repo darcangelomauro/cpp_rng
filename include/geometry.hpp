@@ -74,9 +74,11 @@ class Geom24
         // ============== HAMILTONIAN METHODS
         
         // ============== METROPOLIS METHODS
-        double Geom24::delta2(const int&, const int&, const int&, const arma::cx_double&);
-        double Geom24::delta4(const int&, const int&, const int&, const arma::cx_double&);
+        double delta2(const int&, const int&, const int&, const arma::cx_double&);
+        double delta4(const int&, const int&, const int&, const arma::cx_double&);
+        double delta24(const int&, const int&, const int&, const arma::cx_double&);
         double MMC(const double&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        void delta24_debug(const double&, const int&, gsl_rng*, std::ostream&);
         // ============== METROPOLIS METHODS
         
         void derived_parameters();

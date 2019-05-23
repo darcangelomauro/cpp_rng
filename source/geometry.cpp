@@ -1300,7 +1300,7 @@ double Geom24::calculate_S_old() const
 double Geom24::delta2(const int& x, const int& I, const int& J, const cx_double& z)
 {
     if(I != J)
-        return 4.*dim_omega*dim*( 2.*z*mat[x](J,I).real() + norm(z) );
+        return 4.*dim_omega*dim*( 2.*(z*mat[x](J,I)).real() + norm(z) );
     else
     {
         double trM = trace(mat[x]).real();
@@ -1321,144 +1321,121 @@ double Geom24::delta4(const int& x, const int& I, const int& J, const cx_double&
         {
             for(int i1=0; i1<=i3; ++i1)
             {
-                int e = eps[i1]*eps[i2]*eps[i3]*eps[x];
+                cx_double cliff = omega_table_4[x + nHL*(i3 + nHL*(i2 + nHL*i1))];
 
-                if(e<0)
+                if(cliff.real() != 0. || cliff.imag() != 0.)
                 {
-                    double cliff = omega_table_4[x + nHL*(i3 + nHL*(i2 + nHL*i1))].imag();
+                    // compute necessary matrix products
+                    cx_mat M1M2 = mat[i1]*mat[i2];
+                    cx_mat M2M3 = mat[i2]*mat[i3];
+                    cx_mat M1M3 = mat[i1]*mat[i3];
+                    cx_mat M1M2M3 = mat[i1]*M2M3;
 
-                    if(cliff != 0.)
+                    // compute necessary traces
+                    double trM1 = trace(mat[i1]).real();
+                    double trM2 = trace(mat[i2]).real();
+                    double trM3 = trace(mat[i3]).real();
+                    double trM1M2 = trace(M1M2).real();
+                    double trM2M3 = trace(M2M3).real();
+                    double trM1M3 = trace(M1M3).real();
+                    cx_double trM1M2M3 = trace(M1M2M3);
+                    
+                    // off-diagonal update
+                    if(I != J)
                     {
-                        // compute necessary matrix products
-                        cx_mat M1M2 = mat[i1]*mat[i2];
-                        cx_mat M2M3 = mat[i2]*mat[i3];
-                        cx_mat M1M3 = mat[i1]*mat[i3];
-                        cx_mat M1M2M3 = mat[i1]*M2M3;
 
-                        // compute necessary traces
-                        double trM1 = trace(mat[i1]).real();
-                        double trM2 = trace(mat[i2]).real();
-                        double trM3 = trace(mat[i3]).real();
-                        double trM1M2 = trace(M1M2).real();
-                        double trM2M3 = trace(M2M3).real();
-                        double trM1M3 = trace(M1M3).real();
-                        cx_double trM1M2M3 = trace(M1M2M3);
+                        // compute terms
+                        // _______________________________________________________________________________________
+                        cx_double T1 = M1M2M3(J,I)*z + M1M2M3(I,J)*conj(z);
+                        T1 = T1 + conj(T1)*(double)(eps[i1]*eps[i2]*eps[i3]*eps[x]);
+                        T1 *= (double)dim;
+
+                        cx_double T2 = M1M2(J,I)*z + M1M2(I,J)*conj(z);
+                        T2 = T2*(double)(eps[i3]) + conj(T2)*(double)(eps[i1]*eps[i2]*eps[x]);
+                        T2 = T2*trM3;
+                        T1 += T2;
+
+                        cx_double T3 = M1M3(J,I)*z + M1M3(I,J)*conj(z);
+                        T3 = T3*(double)(eps[i2]) + conj(T3)*(double)(eps[i1]*eps[i3]*eps[x]);
+                        T3 = T3*trM2;
+                        T1 += T3;
+
+                        cx_double T4 = M2M3(J,I)*z + M2M3(I,J)*conj(z);
+                        T4 = T4*(double)(eps[i1]) + conj(T4)*(double)(eps[i2]*eps[i3]*eps[x]);
+                        T4 = T4*trM1;
+                        T1 += T4;
+
+                        double T5 = trM1M2*(eps[i1]*eps[i2] + eps[i3]*eps[x]);
+                        T5 *= 2.*(mat[i3](J,I)*z).real();
+                        T1 += T5;
                         
-                        // off-diagonal update
-                        if(I != J)
-                        {
-
-                            // compute terms
-                            // _______________________________________________________________________________________
-                            double T1 = dim*(z*M1M2M3(J,I) + conj(z)*M1M2M3(I,J)).imag();
-                            double T2 = eps[i3]*(z*M1M2(J,I) + conj(z)*M1M2(I,J)).imag();
-                            double T3 = eps[i2]*(z*M1M3(J,I) + conj(z)*M1M3(I,J)).imag();
-                            double T4 = eps[i1]*(z*M2M3(J,I) + conj(z)*M2M3(I,J)).imag();
-                            //________________________________________________________________________________________
-                            
-                            
-
-                            // add to total
-                            if(i1 != i3)
-                                res -= 4.*cliff*(T1+T2+T3+T4);
-                            else
-                                res -= 2.*cliff*(T1+T2+T3+T4);
-                        }
-
+                        double T6 = trM2M3*(eps[i2]*eps[i3] + eps[i1]*eps[x]);
+                        T6 *= 2.*(mat[i1](J,I)*z).real();
+                        T1 += T6;
                         
-                        // diagonal update
+                        double T7 = trM1M3*(eps[i1]*eps[i3] + eps[i2]*eps[x]);
+                        T7 *= 2.*(mat[i2](J,I)*z).real();
+                        T1 += T7;
+                        //________________________________________________________________________________________
+                        
+                        
+
+                        // add to total
+                        if(i1 != i3)
+                            res += 2.*(cliff*T1).real();
                         else
-                        {
-                            
-                            // compute terms
-                            // _______________________________________________________________________________________
-                            double T1 = dim*M1M2M3(I,I).imag();
-                            double T2 = eps[x]*trM1M2M3.imag();
-                            double T3 = eps[i3]*M1M2(I,I).imag()*trM3;
-                            double T4 = eps[i2]*M1M3(I,I).imag()*trM2;
-                            double T5 = eps[i1]*M2M3(I,I).imag()*trM1;
-                            //________________________________________________________________________________________
-                            
-                            
-
-                            // add to total
-                            if(i1 != i3)
-                                res -= 8.*cliff*(T1+T2+T3+T4+T5)*z.real();
-                            else
-                                res -= 4.*cliff*(T1+T2+T3+T4+T5)*z.real();
-                        }
+                            res += (cliff*T1).real();
                     }
-                }
-                else // e>0
-                {
-                    double cliff = omega_table_4[x + nHL*(i3 + nHL*(i2 + nHL*i1))].real();
 
-                    if(cliff != 0.)
+                    
+                    // diagonal update
+                    else
                     {
-                        // compute necessary matrix products
-                        cx_mat M1M2 = mat[i1]*mat[i2];
-                        cx_mat M2M3 = mat[i2]*mat[i3];
-                        cx_mat M1M3 = mat[i1]*mat[i3];
-                        cx_mat M1M2M3 = mat[i1]*M2M3;
-
-                        // compute necessary traces
-                        double trM1 = trace(mat[i1]).real();
-                        double trM2 = trace(mat[i2]).real();
-                        double trM3 = trace(mat[i3]).real();
-                        double trM1M2 = trace(M1M2).real();
-                        double trM2M3 = trace(M2M3).real();
-                        double trM1M3 = trace(M1M3).real();
-                        cx_double trM1M2M3 = trace(M1M2M3);
                         
-                        // off-diagonal update
-                        if(I != J)
-                        {
+                        // compute terms
+                        // _______________________________________________________________________________________
+                        cx_double T1 = M1M2M3(I,I);
+                        T1 = T1 + conj(T1)*(double)(eps[i1]*eps[i2]*eps[i3]*eps[x]);
+                        T1 = T1*(double)dim;
 
-                            // compute terms
-                            // _______________________________________________________________________________________
-                            double T1 = dim*(z*M1M2M3(J,I) + conj(z)*M1M2M3(I,J)).real();
-                            double T2 = eps[i3]*(z*M1M2(J,I) + conj(z)*M1M2(I,J)).real();
-                            double T3 = eps[i2]*(z*M1M3(J,I) + conj(z)*M1M3(I,J)).real();
-                            double T4 = eps[i1]*(z*M2M3(J,I) + conj(z)*M2M3(I,J)).real();
-                            double T5 = 4*(mat[i3](J,I)*z).real()*eps[i1]*eps[i2]*trM1M2;
-                            double T6 = 4*(mat[i2](J,I)*z).real()*eps[i1]*eps[i3]*trM1M3;
-                            double T7 = 4*(mat[i1](J,I)*z).real()*eps[i2]*eps[i3]*trM2M3;
-                            //________________________________________________________________________________________
-                            
-                            
+                        cx_double T2 = M1M2(I,I);
+                        T2 = T2*(double)(eps[i3]) + conj(T2)*(double)(eps[i1]*eps[i2]*eps[x]);
+                        T2 *= trM3;
+                        T1 += T2;
 
-                            // add to total
-                            if(i1 != i3)
-                                res += 4.*cliff*(T1+T2+T3+T4+T5+T6+T7);
-                            else
-                                res += 2.*cliff*(T1+T2+T3+T4+T5+T6+T7);
-                        }
+                        cx_double T3 = M1M3(I,I);
+                        T3 = T3*(double)(eps[i2]) + conj(T3)*(double)(eps[i1]*eps[i3]*eps[x]);
+                        T3 *= trM2;
+                        T1 += T3;
 
+                        cx_double T4 = M2M3(I,I);
+                        T4 = T4*(double)(eps[i1]) + conj(T4)*(double)(eps[i2]*eps[i3]*eps[x]);
+                        T4 *= trM1;
+                        T1 += T4;
+
+                        double T5 = trM1M2*(eps[i1]*eps[i2] + eps[i3]*eps[x]);
+                        T5 *= mat[i3](I,I).real();
+                        T1 += T5;
+
+                        double T6 = trM2M3*(eps[i2]*eps[i3] + eps[i1]*eps[x]);
+                        T6 *= mat[i1](I,I).real();
+                        T1 += T6;
+
+                        double T7 = trM1M3*(eps[i1]*eps[i3] + eps[i2]*eps[x]);
+                        T7 *= mat[i2](I,I).real();
+                        T1 += T7;
                         
-                        // diagonal update
+                        cx_double T8 = conj(trM1M2M3)*(double)(eps[i1]*eps[i2]*eps[i3]) + trM1M2M3*(double)(eps[x]);
+                        T1 += T8;
+                        //________________________________________________________________________________________
+                        
+                        
+
+                        // add to total
+                        if(i1 != i3)
+                            res += (cliff*T1).real()*4.*z.real();
                         else
-                        {
-                            
-                            // compute terms
-                            // _______________________________________________________________________________________
-                            double T1 = dim*M1M2M3(I,I).real();
-                            double T2 = eps[x]*trM1M2M3.real();
-                            double T3 = eps[i3]*M1M2(I,I).real()*trM3;
-                            double T4 = eps[i2]*M1M3(I,I).real()*trM2;
-                            double T5 = eps[i1]*M2M3(I,I).real()*trM1;
-                            double T6 = 2*mat[i3](I,I).real()*trM1M2*eps[i1]*eps[i2];
-                            double T7 = 2*mat[i2](I,I).real()*trM1M3*eps[i1]*eps[i3];
-                            double T8 = 2*mat[i1](I,I).real()*trM2M3*eps[i2]*eps[i3];
-                            //________________________________________________________________________________________
-                            
-                            
-
-                            // add to total
-                            if(i1 != i3)
-                                res += 8.*cliff*(T1+T2+T3+T4+T5+T6+T7+T8)*z.real();
-                            else
-                                res += 4.*cliff*(T1+T2+T3+T4+T5+T6+T7+T8)*z.real();
-                        }
+                            res += (cliff*T1).real()*2.*z.real();
                     }
                 }
             }
@@ -1479,7 +1456,7 @@ double Geom24::delta4(const int& x, const int& I, const int& J, const cx_double&
         cx_mat M1M1 = mat[i]*mat[i];
 
         // compute necessary traces
-        double trM1 = trace(MAT[i]).real();
+        double trM1 = trace(mat[i]).real();
         double trM1M1 = trace(M1M1).real();
 
         // off-diagonal update
@@ -1550,7 +1527,7 @@ double Geom24::delta4(const int& x, const int& I, const int& J, const cx_double&
     // off-diangonal update
     if(I != J)
     {
-        temp = 4.*dim_omega*(dim+6)*norm(z)*mat[x](J,I)*z.real();
+        temp = 4.*dim_omega*(dim+6)*norm(z)*(mat[x](J,I)*z).real();
         res += 4.*temp;
     }
 
@@ -1585,6 +1562,12 @@ double Geom24::delta4(const int& x, const int& I, const int& J, const cx_double&
 }
 
 
+double Geom24::delta24(const int& x, const int& I, const int& J, const cx_double& z)
+{
+    return g2*delta2(x,I,J,z)+delta4(x,I,J,z);
+}
+
+
 double Geom24::MMC(const double& scale, const int& iter, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
     double ar = 0;
@@ -1595,7 +1578,7 @@ double Geom24::MMC(const double& scale, const int& iter, gsl_rng* engine, ostrea
     // iter iterations of metropolis
     for(int i=0; i<iter; ++i)
     {
-        // set potential to previous final value,
+        // set action to previous final value,
         // unless it's the first iteration
         if(i)
             Si = Sf;
@@ -1667,20 +1650,81 @@ double Geom24::MMC(const double& scale, const int& iter, gsl_rng* engine, ostrea
                 Sf = Si;
         }
     
-        // print S
-        out_s << Sf << endl; 
-
-        // print mat
-        for(int j=0; j<nHL; ++j)
+        // print after a complete sweep
+        if(i % dim*dim*nHL)
         {
-            for(int k=0; k<dim; ++k)
+            //action
+            out_s << Sf << endl; 
+
+            // mat
+            for(int j=0; j<nHL; ++j)
             {
-                for(int l=0; l<dim; ++l)
-                    out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+                for(int k=0; k<dim; ++k)
+                {
+                    for(int l=0; l<dim; ++l)
+                        out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+                }
+                out_hl << endl;
             }
-            out_hl << endl;
         }
     }
 
     return ar/iter;
+}
+
+void Geom24::delta24_debug(const double& scale, const int& iter, gsl_rng* engine, ostream& out_s)
+{
+    // iter iterations
+    for(int i=0; i<iter; ++i)
+    {
+        // find Si
+        shuffle();
+        //double Si_1 = dirac2();
+        //double Si_1 = dirac4();
+        double Si_1 = calculate_S();
+        
+        // random move
+        int x = nHL*gsl_rng_uniform(engine);
+        int I = dim*gsl_rng_uniform(engine);
+        int J = dim*gsl_rng_uniform(engine);
+        double re = 0;
+        double im = 0;
+        cx_double z;
+        if(I != J)
+        {
+            re = scale*(-1.+2.*gsl_rng_uniform(engine));
+            im = scale*(-1.+2.*gsl_rng_uniform(engine));
+            z = cx_double(re, im);
+        }
+        else
+        {
+            re = scale*(-1.+2.*gsl_rng_uniform(engine));
+            z = cx_double(re, 0);
+        }
+
+        //double dS = delta2(x, I, J, z);
+        //double dS = delta4(x, I, J, z);
+        double dS = delta24(x, I, J, z);
+
+        bool diag = true;
+        // update matrix element
+        if(I != J)
+        {
+            mat[x](I,J) += z;
+            mat[x](J,I) += conj(z);
+            diag = false;
+        }
+        else
+            mat[x](I,I) += 2.*z;
+        
+        // find Sf
+        //double Sf_1 = dirac2();
+        //double Sf_1 = dirac4();
+        double Sf_1 = calculate_S();
+
+    
+        // print S
+        out_s.precision(16);
+        out_s << Si_1 << " " << Sf_1 << " " << Sf_1-Si_1 << " " << dS << " " << Sf_1-Si_1-dS << " " << diag << endl; 
+    }
 }
