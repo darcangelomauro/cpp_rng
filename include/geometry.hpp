@@ -73,6 +73,11 @@ class Geom24
         double dual_averaging(const int&, double&, const int&, gsl_rng*, std::ostream&, std::ostream&);
         // ============== HAMILTONIAN METHODS
         
+        // ============== METROPOLIS METHODS
+        double Geom24::delta2(const int&, const int&, const int&, const arma::cx_double&);
+        double Geom24::delta4(const int&, const int&, const int&, const arma::cx_double&);
+        double MMC(const double&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        // ============== METROPOLIS METHODS
         
         void derived_parameters();
         void shuffle();
