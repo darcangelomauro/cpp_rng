@@ -21,9 +21,9 @@ int main()
     Geom24 G(2, 0, 10, -2.5);
     
     ofstream out_s;
-    out_s.open("base_s.txt");
+    out_s.open("data/base_s.txt");
     ofstream out_hl;
-    out_hl.open("base_hl.txt");
+    out_hl.open("data/base_hl.txt");
     double ar = G.HMC(100, 0.0001, 100, engine, out_s, out_hl);
     out_s.close();
     out_hl.close();

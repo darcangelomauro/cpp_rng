@@ -24,7 +24,7 @@ int main()
     double tau = 0.0001;
 
     ofstream out;
-    out.open("quadratic.txt");
+    out.open("data/quadratic.txt");
     out.precision(16);
 
     while(tau >= 0.00001)

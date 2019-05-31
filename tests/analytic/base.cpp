@@ -47,7 +47,7 @@ int main()
     clock_t end = clock();
     
     ofstream out_s;
-    out_s.open("p2q0dim10gn2_5.txt");
+    out_s.open("data/p2q0dim10gn2_5.txt");
 
     // calculate average of 2gTrD2 + 4TrD4 based on the last iter/10 samples
     for(int i=0; i<(iter-(iter/10)); ++i)

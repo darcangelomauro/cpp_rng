@@ -19,16 +19,16 @@ int main(int argc, char** argv)
     }
 
     string argv1(argv[1]);
-    string filename_data = argv1 + "_data.txt";
+    string filename_data = "data/" + argv1 + "_data.txt";
     ifstream in_data;
     in_data.open(filename_data);
     
     if(in_data.is_open())
     {
         ofstream out_s;
-        out_s.open(argv1 + "_S_varG.txt");
+        out_s.open("data/" + argv1 + "_S_varG.txt");
         ofstream out_f;
-        out_f.open(argv1 + "_F_varG.txt");
+        out_f.open("data/" + argv1 + "_F_varG.txt");
         
         int idx;
         int p, q, dim;
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         while(in_data >> idx >> p >> q >> dim >> g)
         {
             // action related operations
-            string filename_s = argv1 + "_simS_" + to_string(idx) + ".txt";
+            string filename_s = "data/" + argv1 + "_simS_" + to_string(idx) + ".txt";
             ifstream in_s;
             in_s.open(filename_s);
             
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
             in_s.close();
 
             // matrix related operations
-            string filename_hl = argv1 + "_simHL_" + to_string(idx) + ".txt";
+            string filename_hl = "data/" + argv1 + "_simHL_" + to_string(idx) + ".txt";
             ifstream in_hl;
             in_hl.open(filename_hl);
             if(in_hl.is_open())

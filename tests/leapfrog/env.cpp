@@ -26,7 +26,7 @@ int main()
     G.sample_mom(engine);
     
     ofstream out;
-    out.open("env.txt");
+    out.open("data/env.txt");
     out.precision(10);
     double S = G.calculate_S();
     double K = G.calculate_K();

@@ -21,7 +21,7 @@ int main()
     Geom24 G(2, 2, 20, -2.5);
     
     ofstream out_s;
-    out_s.open("base_s.txt");
+    out_s.open("data/base_s.txt");
 
     G.delta24_debug(0.01, 1000, engine, out_s);
 

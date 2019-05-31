@@ -26,9 +26,9 @@ int main()
     Geom24 G1(p, q, dim, g2);
     
     ofstream out_da_s_h;
-    out_da_s_h.open("base_da_s_h.txt");
+    out_da_s_h.open("data/base_da_s_h.txt");
     ofstream out_da_hl_h;
-    out_da_hl_h.open("base_da_hl_h.txt");
+    out_da_hl_h.open("data/base_da_hl_h.txt");
     double dt = 0.05;
     dt = G1.dual_averaging_HMC(100, dt, 100, engine, out_da_s_h, out_da_hl_h);
     out_da_s_h.close();
@@ -37,9 +37,9 @@ int main()
     cout << "Dual averaging result hmc: " << dt << endl;
 
     ofstream out_s_h;
-    out_s_h.open("base_s_h.txt");
+    out_s_h.open("data/base_s_h.txt");
     ofstream out_hl_h;
-    out_hl_h.open("base_hl_h.txt");
+    out_hl_h.open("data/base_hl_h.txt");
     double ar = G1.HMC(100, dt, 100, engine, out_s_h, out_hl_h);
     out_s_h.close();
     out_hl_h.close();
@@ -50,9 +50,9 @@ int main()
     Geom24 G2(p, q, dim, g2);
     
     ofstream out_da_s_m;
-    out_da_s_m.open("base_da_s_m.txt");
+    out_da_s_m.open("data/base_da_s_m.txt");
     ofstream out_da_hl_m;
-    out_da_hl_m.open("base_da_hl_m.txt");
+    out_da_hl_m.open("data/base_da_hl_m.txt");
     double scale = 0.05;
     scale = G2.dual_averaging_MMC(scale, 100, engine, out_da_s_m, out_da_hl_m);
     out_da_s_m.close();
@@ -61,9 +61,9 @@ int main()
     cout << "Dual averaging result mmc: " << scale << endl;
 
     ofstream out_s_m;
-    out_s_m.open("base_s_m.txt");
+    out_s_m.open("data/base_s_m.txt");
     ofstream out_hl_m;
-    out_hl_m.open("base_hl_m.txt");
+    out_hl_m.open("data/base_hl_m.txt");
     ar = G2.MMC(scale, 100, engine, out_s_m, out_hl_m);
     out_s_m.close();
     out_hl_m.close();

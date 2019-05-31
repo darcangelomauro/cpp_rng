@@ -22,7 +22,7 @@ int main()
     const double step = -0.15;
 
     ofstream out_1;
-    out_1.open("20180608_data.txt");
+    out_1.open("data/20180608_data.txt");
 
     for(int i=0; i<15; i++)
     {
@@ -33,13 +33,13 @@ int main()
         
         // action output file
         ofstream out_s;
-        string filename_s = "20180608_simS_" + to_string(i) + ".txt"; 
+        string filename_s = "data/20180608_simS_" + to_string(i) + ".txt"; 
         out_s.open(filename_s);
         out_s.precision(15);
         
         // mat output file
         ofstream out_hl;
-        string filename_hl = "20180608_simHL_" + to_string(i) + ".txt"; 
+        string filename_hl = "data/20180608_simHL_" + to_string(i) + ".txt"; 
         out_hl.open(filename_hl);
         out_hl.precision(15);
         
