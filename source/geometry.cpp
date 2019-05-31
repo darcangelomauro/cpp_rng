@@ -665,6 +665,7 @@ double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* en
     // iter repetitions of leapfrog
     for(int i=0; i<iter; ++i)
     {
+        // resample momentum
         sample_mom(engine);
 
         // store previous configuration
@@ -742,6 +743,7 @@ double Geom24::HMC_analytic_test(const int& Nt, const double& dt, const int& ite
     // iter repetitions of leapfrog
     for(int i=0; i<iter; ++i)
     {
+        // resample momentum
         sample_mom(engine);
 
         // store previous configuration
@@ -815,6 +817,7 @@ double Geom24::dual_averaging_HMC(const int& Nt, double& dt, const int& iter, gs
     // iter repetitions of leapfrog
     for(int i=0; i<iter; ++i)
     {
+        // resample momentum
         sample_mom(engine);
 
         // store previous configuration
@@ -841,12 +844,22 @@ double Geom24::dual_averaging_HMC(const int& Nt, double& dt, const int& iter, gs
         Hf = Sf+Kf;
 
         // metropolis test
-        if(Hf > Hi || isnan(Hf))
+        if(isnan(Hf))
+        {
+            Stat += 0.65;
+            // restore old configuration
+            for(int j=0; j<nHL; ++j)
+            {
+                mat[j] = mat_bk[j];
+                Sf = Si;
+                Kf = Ki;
+                Hf = Hi;
+            }
+        }
+        else if(Hf > Hi)
         {
             double r = gsl_rng_uniform(engine);
-            double e;
-            if(isnan(Hf)) e = 0;
-            else e = exp(Hi-Hf);
+            double e = exp(Hi-Hf);
 
             Stat += 0.65-e;
 
@@ -910,10 +923,10 @@ double Geom24::dual_averaging_MMC(double& scale, const int& iter, gsl_rng* engin
     double Si;
     double Sf;
 
-    // iter repetitions of leapfrog
+    // iter repetitions of metropolis
     for(int i=0; i<iter; ++i)
     {
-        // set potential to previous final value,
+        // set action to previous final value,
         // unless it's the first iteration
         if(i)
             Si = Sf;
@@ -991,7 +1004,7 @@ double Geom24::dual_averaging_MMC(double& scale, const int& iter, gsl_rng* engin
         double eta = pow(i+1, -kappa);
         log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
 
-        // print S, K, H
+        // print S
         out_s << Sf << endl; 
 
         // print mat
