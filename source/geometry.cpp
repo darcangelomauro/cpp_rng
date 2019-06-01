@@ -241,12 +241,14 @@ ostream& operator<<(ostream& out, const Geom24& G)
     return out;
 }
 
-void Geom24::shuffle()
+void Geom24::shuffle(gsl_rng* engine)
 {
     for(int i=0; i<nHL; i++)
     {
-        arma::cx_mat temp(dim, dim, arma::fill::randn);
-        mat[i] = (temp + temp.t())/(2*dim*dim);
+        cx_mat temp(dim, dim);
+        temp.imbue( [&engine](){ return cx_double(gsl_ran_gaussian(engine, 1.), gsl_ran_gaussian(engine, 1.)); } );
+
+        mat[i] = (temp+temp.t())/(2*dim*dim);
     }
 }
 
@@ -595,26 +597,6 @@ void Geom24::sample_mom(gsl_rng* engine)
         temp.imbue( [&engine](){ return cx_double(gsl_ran_gaussian(engine, 1.), gsl_ran_gaussian(engine, 1.)); } );
 
         mom[i] = (temp+temp.t())/2.;
-
-        /*
-        for(int j=0; j<dim; ++j)
-        {
-            for(int k=j+1; k<dim; ++k)
-            {
-                double x = gsl_ran_gaussian(engine, 1.)/sqrt(2.);
-                double y = gsl_ran_gaussian(engine, 1.)/sqrt(2.);
-
-                mom[i](j,k) = cx_double(x,y);
-                mom[i](k,j) = cx_double(x,-y);
-            }
-        }
-
-        for(int j=0; j<dim; ++j)
-        {
-            double x = gsl_ran_gaussian(engine, 1.);
-            mom[i](j,j) = cx_double(x, 0.);
-        }
-        */
     }
 }
 
@@ -655,66 +637,106 @@ void Geom24::leapfrog(const int& Nt, const double& dt)
 }
 
 
-double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+double Geom24::HMC_core(const int& Nt, const double& dt, gsl_rng* engine, double* en_i, double* en_f)
 {
-    double ar = 0;
+    // acceptance probability (return value)
+    double e;
+    
+    // resample momentum
+    sample_mom(engine);
 
-    double Si, Ki, Hi;
-    double Sf, Kf, Hf;
+    // store previous configuration
+    cx_mat* mat_bk = new cx_mat [nHL];
+    for(int j=0; j<nHL; j++)
+        mat_bk[j] = mat[j];
 
+    // calculate initial hamiltonian
+    en_i[1] = calculate_K();
+    en_i[2] = en_i[0]+en_i[1];
+
+    // leapfrog
+    leapfrog(Nt, dt);
+
+    // calculate final hamiltonian
+    en_f[0] = calculate_S();
+    en_f[1] = calculate_K();
+    en_f[2] = en_f[0]+en_f[1];
+
+
+    // metropolis test
+    
+    // sometimes leapfrog diverges and Hf becomes nan.
+    // so first of all address this case
+    if(isnan(en_f[2]))
+    {
+        e = 0;
+        // restore old configuration
+        for(int j=0; j<nHL; ++j)
+        {
+            mat[j] = mat_bk[j];
+            en_f[0] = en_i[0];
+            en_f[1] = en_i[1];
+            en_f[2] = en_i[2];
+        }
+    }
+    // now do the standard metropolis test
+    else if(en_f[2] > en_i[2])
+    {
+        double r = gsl_rng_uniform(engine);
+        e = exp(en_i[2]-en_f[2]);
+
+        if(r > e)
+        {
+            // restore old configuration
+            for(int j=0; j<nHL; ++j)
+            {
+                mat[j] = mat_bk[j];
+                en_f[0] = en_i[0];
+                en_f[1] = en_i[1];
+                en_f[2] = en_i[2];
+            }
+        }
+    }
+    else
+        e = 1;
+
+    return e;
+}
+
+
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, const bool& duav, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+{
+    // initial (_i) and final (_f) potential, kinetic, hamiltonian 
+    double* en_i = new double [3];
+    double* en_f = new double [3];
+
+    // dual averaging variables
+    double Stat = 0;
+    double mu = log(10*dt);
+    double shr = 0.05;
+    int i0 = 10;
+    double kappa = 0.75;
+    double log_dt_avg = log(dt);
+    
     // iter repetitions of leapfrog
     for(int i=0; i<iter; ++i)
     {
-        // resample momentum
-        sample_mom(engine);
-
-        // store previous configuration
-        cx_mat* mat_bk = new cx_mat [nHL];
-        for(int j=0; j<nHL; j++)
-            mat_bk[j] = mat[j];
-
-        // set potential to previous final value,
-        // unless it's the first iteration
+        
+        // if it's not the first interation set potential to
+        // previous final value, otherwise compute it
         if(i)
-            Si = Sf;
+            en_i[0] = en_f[0];
         else
-            Si = calculate_S();
+            en_i[0] = calculate_S();
 
-        Ki = calculate_K();
-        Hi = Si+Ki;
+        
+        // core part of HMC
+        Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
+        
 
-        // leapfrog
-        leapfrog(Nt, dt);
-
-        // final hamiltonian
-        Sf = calculate_S();
-        Kf = calculate_K();
-        Hf = Sf+Kf;
-
-        // metropolis test
-        if(Hf > Hi)
-        {
-            double r = gsl_rng_uniform(engine);
-            double e = exp(Hi-Hf);
-
-            if(r > e)
-            {
-                // restore old configuration
-                for(int j=0; j<nHL; ++j)
-                {
-                    mat[j] = mat_bk[j];
-                    Sf = Si;
-                    Kf = Ki;
-                    Hf = Hi;
-                }
-            }
-            else ++ar;
-        }
-        else ++ar;
-    
         // print S, K, H
-        out_s << Sf << " " << Kf << " " << Hf << endl; 
-
+        out_s << en_f[0] << " " << en_f[1] << " " << en_f[2] << endl; 
+        
         // print mat
         for(int j=0; j<nHL; ++j)
         {
@@ -727,12 +749,84 @@ double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* en
         }
 
 
-        delete [] mat_bk;
+        // perform dual averaging if duav is true
+        if(duav)
+        {
+            double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+            dt = exp(log_dt);
+            double eta = pow(i+1, -kappa);
+            log_dt_avg = eta*log_dt + (1-eta)*log_dt_avg;
+        }
+
     }
 
-    return ar/iter;
+    if(duav)
+        dt = exp(log_dt_avg);
+
+
+    delete [] en_i;
+    delete [] en_f;
+
+    return (0.65 - Stat/iter);
 }
 
+double Geom24::HMC_analytic_test(const int& Nt, double& dt, const int& iter, const bool& duav, gsl_rng* engine, double* vec2, double* vec4)
+{
+    // initial (_i) and final (_f) potential, kinetic, hamiltonian 
+    double* en_i = new double [3];
+    double* en_f = new double [3];
+
+    // dual averaging variables
+    double Stat = 0;
+    double mu = log(10*dt);
+    double shr = 0.05;
+    int i0 = 10;
+    double kappa = 0.75;
+    double log_dt_avg = log(dt);
+    
+    // iter repetitions of leapfrog
+    for(int i=0; i<iter; ++i)
+    {
+        
+        // if it's not the first interation set potential to
+        // previous final value, otherwise compute it
+        if(i)
+            en_i[0] = en_f[0];
+        else
+            en_i[0] = calculate_S();
+
+        
+        // core part of HMC
+        Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
+        
+
+        // print S2, S4
+        vec2[i] = dirac2();
+        vec4[i] = dirac4();
+
+
+        // perform dual averaging if duav is true
+        if(duav)
+        {
+            double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+            dt = exp(log_dt);
+            double eta = pow(i+1, -kappa);
+            log_dt_avg = eta*log_dt + (1-eta)*log_dt_avg;
+        }
+
+    }
+
+    if(duav)
+        dt = exp(log_dt_avg);
+
+
+    delete [] en_i;
+    delete [] en_f;
+
+    return (0.65 - Stat/iter);
+}
+
+/*
 double Geom24::HMC_analytic_test(const int& Nt, const double& dt, const int& iter, gsl_rng* engine, double* vec2, double* vec4)
 {
     double ar = 0;
@@ -799,7 +893,10 @@ double Geom24::HMC_analytic_test(const int& Nt, const double& dt, const int& ite
 
     return ar/iter;
 }
+*/
 
+
+/*
 double Geom24::dual_averaging_HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
     // dual averaging variables
@@ -907,7 +1004,291 @@ double Geom24::dual_averaging_HMC(const int& Nt, double& dt, const int& iter, gs
 
     return exp(log_dt_avg);
 }
+*/
 
+double Geom24::MMC_core(const double& scale, gsl_rng* engine, const double& Si, double& Sf)
+{
+    // acceptance probability
+    double e;
+
+    // metropolis
+    int x = nHL*gsl_rng_uniform(engine);
+    int I = dim*gsl_rng_uniform(engine);
+    int J = dim*gsl_rng_uniform(engine);
+    double re = 0;
+    double im = 0;
+    cx_double z;
+    if(I != J)
+    {
+        re = scale*(-1.+2.*gsl_rng_uniform(engine));
+        im = scale*(-1.+2.*gsl_rng_uniform(engine));
+        z = cx_double(re, im);
+    }
+    else
+    {
+        re = scale*(-1.+2.*gsl_rng_uniform(engine));
+        z = cx_double(re, 0);
+    }
+
+    double dS = delta24(x, I, J, z);
+
+    // metropolis test
+    if(dS < 0)
+    {
+        // update matrix element
+        if(I != J)
+        {
+            mat[x](I,J) += z;
+            mat[x](J,I) += conj(z);
+        }
+        else
+            mat[x](I,I) += 2.*z;
+
+        // update action
+        Sf = Si+dS;
+
+        // move accepted
+        e = 1;
+    }
+    else
+    {
+        e = exp(-dS);
+        double p = gsl_rng_uniform(engine);
+
+        if(e>p)
+        {
+            // update matrix element
+            if(I != J)
+            {
+                mat[x](I,J) += z;
+                mat[x](J,I) += conj(z);
+            }
+            else
+                mat[x](I,I) += 2.*z;
+
+            // update action
+            Sf = Si+dS;
+        }
+        else
+            Sf = Si;
+    }
+
+    return e;
+}
+        
+
+
+double Geom24::MMC(double& scale, const int& iter, const bool& duav, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+{
+    // initial and final value of the action
+    double Si, Sf;
+
+    // calculate length of a sweep in terms of dofs
+    int Nsw = nHL*dim*dim;
+
+    // dual averaging variables
+    double Stat = 0;
+    double mu = log(10*scale);
+    double shr = 0.05;
+    int i0 = 10;
+    double kappa = 0.75;
+    double log_scale_avg = log(scale);
+
+    // iter sweeps of metropolis
+    for(int i=0; i<iter; ++i)
+    {
+        for(int j=0; j<Nsw; ++j)
+        {
+            // set action to previous final value,
+            // unless it's the first iteration
+            if(j)
+                Si = Sf;
+            else
+                Si = calculate_S();
+
+            Stat += 0.232 - MMC_core(scale, engine, Si, Sf);
+        
+            // perform dual averaging if duav is ture
+            if(duav)
+            {
+                double log_scale = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+                scale = exp(log_scale);
+                double eta = pow(i+1, -kappa);
+                log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
+            }
+        }
+
+        
+        // print after a complete sweep
+    
+        //action
+        out_s << Sf << endl; 
+
+        // mat
+        for(int j=0; j<nHL; ++j)
+        {
+            for(int k=0; k<dim; ++k)
+            {
+                for(int l=0; l<dim; ++l)
+                    out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+            }
+            out_hl << endl;
+        }
+    }
+    
+    if(duav)
+        scale = exp(log_scale_avg);
+
+    return (0.232 - Stat/(iter*Nsw));
+}
+
+double Geom24::MMC_analytic_test(double& scale, const int& iter, const bool& duav, gsl_rng* engine, double* vec2, double* vec4)
+{
+    // initial and final value of the action
+    double Si, Sf;
+
+    // calculate length of a sweep in terms of dofs
+    int Nsw = nHL*dim*dim;
+
+    // dual averaging variables
+    double Stat = 0;
+    double mu = log(10*scale);
+    double shr = 0.05;
+    int i0 = 10;
+    double kappa = 0.75;
+    double log_scale_avg = log(scale);
+
+    // iter sweeps of metropolis
+    for(int i=0; i<iter; ++i)
+    {
+        for(int j=0; j<Nsw; ++j)
+        {
+            // set action to previous final value,
+            // unless it's the first iteration
+            if(j)
+                Si = Sf;
+            else
+                Si = calculate_S();
+
+            Stat += 0.232 - MMC_core(scale, engine, Si, Sf);
+        
+            // perform dual averaging if duav is ture
+            if(duav)
+            {
+                double log_scale = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+                scale = exp(log_scale);
+                double eta = pow(i+1, -kappa);
+                log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
+            }
+        }
+
+        
+        // print after a complete sweep
+        vec2[i] = dirac2();
+        vec4[i] = dirac4();
+    }
+    
+    if(duav)
+        scale = exp(log_scale_avg);
+
+    return (0.232 - Stat/(iter*Nsw));
+}
+
+
+/*
+double Geom24::MMC_analytic_test(const double& scale, const int& iter, gsl_rng* engine, double* vec2, double* vec4)
+{
+    double ar = 0;
+
+    double Si;
+    double Sf;
+
+    int Nsw = nHL*dim*dim;
+
+    // iter iterations of metropolis
+    for(int i=0; i<iter; ++i)
+    {
+        for(int j=0; j<Nsw; ++j)
+        {
+            // set action to previous final value,
+            // unless it's the first iteration
+            if(i)
+                Si = Sf;
+            else
+                Si = calculate_S();
+
+            // metropolis
+            int x = nHL*gsl_rng_uniform(engine);
+            int I = dim*gsl_rng_uniform(engine);
+            int J = dim*gsl_rng_uniform(engine);
+            double re = 0;
+            double im = 0;
+            cx_double z;
+            if(I != J)
+            {
+                re = scale*(-1.+2.*gsl_rng_uniform(engine));
+                im = scale*(-1.+2.*gsl_rng_uniform(engine));
+                z = cx_double(re, im);
+            }
+            else
+            {
+                re = scale*(-1.+2.*gsl_rng_uniform(engine));
+                z = cx_double(re, 0);
+            }
+
+            double dS = delta24(x, I, J, z);
+
+            // metropolis test
+            if(dS < 0)
+            {
+                // update matrix element
+                if(I != J)
+                {
+                    mat[x](I,J) += z;
+                    mat[x](J,I) += conj(z);
+                }
+                else
+                    mat[x](I,I) += 2.*z;
+
+                // update action
+                Sf = Si+dS;
+
+                // move accepted
+                ++ar;
+            }
+            else
+            {
+                double e = exp(-dS);
+                double p = gsl_rng_uniform(engine);
+
+                if(e>p)
+                {
+                    // update matrix element
+                    if(I != J)
+                    {
+                        mat[x](I,J) += z;
+                        mat[x](J,I) += conj(z);
+                    }
+                    else
+                        mat[x](I,I) += 2.*z;
+
+                    // update action
+                    Sf = Si+dS;
+
+                    // move accepted
+                    ++ar;
+                }
+                else
+                    Sf = Si;
+            }
+        }
+
+        vec2[i] = dirac2();
+        vec4[i] = dirac4();
+    }
+
+    return ar/(Nsw*iter);
+}
 
 double Geom24::dual_averaging_MMC(double& scale, const int& iter, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
@@ -1023,7 +1404,7 @@ double Geom24::dual_averaging_MMC(double& scale, const int& iter, gsl_rng* engin
 
     return exp(log_scale_avg);
 }
-    
+*/  
 
 
 
@@ -1762,208 +2143,6 @@ double Geom24::delta24(const int& x, const int& I, const int& J, const cx_double
 }
 
 
-double Geom24::MMC(const double& scale, const int& iter, gsl_rng* engine, ostream& out_s, ostream& out_hl)
-{
-    double ar = 0;
-
-    double Si;
-    double Sf;
-
-    int Nsw = nHL*dim*dim;
-
-    // iter sweeps of metropolis
-    for(int i=0; i<iter; ++i)
-    {
-        for(int j=0; j<Nsw; ++j)
-        {
-            // set action to previous final value,
-            // unless it's the first iteration
-            if(i)
-                Si = Sf;
-            else
-                Si = calculate_S();
-
-            // metropolis
-            int x = nHL*gsl_rng_uniform(engine);
-            int I = dim*gsl_rng_uniform(engine);
-            int J = dim*gsl_rng_uniform(engine);
-            double re = 0;
-            double im = 0;
-            cx_double z;
-            if(I != J)
-            {
-                re = scale*(-1.+2.*gsl_rng_uniform(engine));
-                im = scale*(-1.+2.*gsl_rng_uniform(engine));
-                z = cx_double(re, im);
-            }
-            else
-            {
-                re = scale*(-1.+2.*gsl_rng_uniform(engine));
-                z = cx_double(re, 0);
-            }
-
-            double dS = delta24(x, I, J, z);
-
-            // metropolis test
-            if(dS < 0)
-            {
-                // update matrix element
-                if(I != J)
-                {
-                    mat[x](I,J) += z;
-                    mat[x](J,I) += conj(z);
-                }
-                else
-                    mat[x](I,I) += 2.*z;
-
-                // update action
-                Sf = Si+dS;
-
-                // move accepted
-                ++ar;
-            }
-            else
-            {
-                double e = exp(-dS);
-                double p = gsl_rng_uniform(engine);
-
-                if(e>p)
-                {
-                    // update matrix element
-                    if(I != J)
-                    {
-                        mat[x](I,J) += z;
-                        mat[x](J,I) += conj(z);
-                    }
-                    else
-                        mat[x](I,I) += 2.*z;
-
-                    // update action
-                    Sf = Si+dS;
-
-                    // move accepted
-                    ++ar;
-                }
-                else
-                    Sf = Si;
-            }
-        
-        }
-        
-        // print after a complete sweep
-    
-        //action
-        out_s << Sf << endl; 
-
-        // mat
-        for(int j=0; j<nHL; ++j)
-        {
-            for(int k=0; k<dim; ++k)
-            {
-                for(int l=0; l<dim; ++l)
-                    out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
-            }
-            out_hl << endl;
-        }
-    }
-
-    return ar/(Nsw*iter);
-}
-
-
-double Geom24::MMC_analytic_test(const double& scale, const int& iter, gsl_rng* engine, double* vec2, double* vec4)
-{
-    double ar = 0;
-
-    double Si;
-    double Sf;
-
-    int Nsw = nHL*dim*dim;
-
-    // iter iterations of metropolis
-    for(int i=0; i<iter; ++i)
-    {
-        for(int j=0; j<Nsw; ++j)
-        {
-            // set action to previous final value,
-            // unless it's the first iteration
-            if(i)
-                Si = Sf;
-            else
-                Si = calculate_S();
-
-            // metropolis
-            int x = nHL*gsl_rng_uniform(engine);
-            int I = dim*gsl_rng_uniform(engine);
-            int J = dim*gsl_rng_uniform(engine);
-            double re = 0;
-            double im = 0;
-            cx_double z;
-            if(I != J)
-            {
-                re = scale*(-1.+2.*gsl_rng_uniform(engine));
-                im = scale*(-1.+2.*gsl_rng_uniform(engine));
-                z = cx_double(re, im);
-            }
-            else
-            {
-                re = scale*(-1.+2.*gsl_rng_uniform(engine));
-                z = cx_double(re, 0);
-            }
-
-            double dS = delta24(x, I, J, z);
-
-            // metropolis test
-            if(dS < 0)
-            {
-                // update matrix element
-                if(I != J)
-                {
-                    mat[x](I,J) += z;
-                    mat[x](J,I) += conj(z);
-                }
-                else
-                    mat[x](I,I) += 2.*z;
-
-                // update action
-                Sf = Si+dS;
-
-                // move accepted
-                ++ar;
-            }
-            else
-            {
-                double e = exp(-dS);
-                double p = gsl_rng_uniform(engine);
-
-                if(e>p)
-                {
-                    // update matrix element
-                    if(I != J)
-                    {
-                        mat[x](I,J) += z;
-                        mat[x](J,I) += conj(z);
-                    }
-                    else
-                        mat[x](I,I) += 2.*z;
-
-                    // update action
-                    Sf = Si+dS;
-
-                    // move accepted
-                    ++ar;
-                }
-                else
-                    Sf = Si;
-            }
-        }
-
-        vec2[i] = dirac2();
-        vec4[i] = dirac4();
-    }
-
-    return ar/(Nsw*iter);
-}
 
 void Geom24::delta24_debug(const double& scale, const int& iter, gsl_rng* engine, ostream& out_s)
 {
@@ -1971,12 +2150,12 @@ void Geom24::delta24_debug(const double& scale, const int& iter, gsl_rng* engine
     for(int i=0; i<iter; ++i)
     {
         // find Si
-        shuffle();
+        shuffle(engine);
         //double Si_1 = dirac2();
         //double Si_1 = dirac4();
         double Si_1 = calculate_S();
         
-        // random move
+        // aandom move
         int x = nHL*gsl_rng_uniform(engine);
         int I = dim*gsl_rng_uniform(engine);
         int J = dim*gsl_rng_uniform(engine);

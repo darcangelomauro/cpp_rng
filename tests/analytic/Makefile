@@ -21,7 +21,7 @@ all: rmxeq mkdep mkxeq
 
 MAIN = base
 
-SOURCE = clifford geometry 
+SOURCE = clifford geometry utils 
 
 # search path for modules
 

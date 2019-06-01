@@ -15,7 +15,6 @@ int main()
 {
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
     gsl_rng_set(engine, time(NULL));
-    arma_rng::set_seed(time(NULL)+10);
 
     //const double L = 1;
 
@@ -30,7 +29,7 @@ int main()
     while(tau >= 0.00001)
     {
         Geom24 G(2, 0, 10, -2.2431);
-        G.shuffle();
+        G.shuffle(engine);
         G.sample_mom(engine);
         
         /*

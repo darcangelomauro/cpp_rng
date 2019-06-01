@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <gsl/gsl_rng.h>
 #include "geometry.hpp"
 #include <ctime>
 
@@ -9,7 +10,8 @@ using namespace std;
 
 int main()
 {
-    arma_rng::set_seed(time(NULL));
+    gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
+    gsl_rng_set(engine, time(NULL));
 
     Geom24 c1(cin);
 
@@ -30,7 +32,7 @@ int main()
 
     cout << c1.MAT(0) << endl;
     cout << "S = " << c1.calculate_S() << endl;
-    c1.shuffle();
+    c1.shuffle(engine);
     cout << c1.MAT(0) << endl;
     cout << "S = " << c1.calculate_S() << endl;
 

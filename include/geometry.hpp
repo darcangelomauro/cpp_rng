@@ -69,23 +69,23 @@ class Geom24
         double calculate_K() const;
         double calculate_H() const;
         void leapfrog(const int&, const double&);
-        double HMC(const int&, const double&, const int&, gsl_rng*, std::ostream&, std::ostream&);
-        double HMC_analytic_test(const int&, const double&, const int&, gsl_rng*, double*, double*);
-        double dual_averaging_HMC(const int&, double&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC_core(const int&, const double&, gsl_rng*, double*, double*);
+        double HMC(const int&, double&, const int&, const bool&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC_analytic_test(const int&, double&, const int&, const bool&, gsl_rng*, double*, double*);
         // ============== HAMILTONIAN METHODS
         
         // ============== METROPOLIS METHODS
         double delta2(const int&, const int&, const int&, const arma::cx_double&);
         double delta4(const int&, const int&, const int&, const arma::cx_double&);
         double delta24(const int&, const int&, const int&, const arma::cx_double&);
-        double MMC(const double&, const int&, gsl_rng*, std::ostream&, std::ostream&);
-        double MMC_analytic_test(const double&, const int&, gsl_rng*, double*, double*);
+        double MMC_core(const double&, gsl_rng*, const double&, double&);
+        double MMC(double&, const int&, const bool&, gsl_rng*, std::ostream&, std::ostream&);
+        double MMC_analytic_test(double&, const int&, const bool&, gsl_rng*, double*, double*);
         void delta24_debug(const double&, const int&, gsl_rng*, std::ostream&);
-        double dual_averaging_MMC(double&, const int&, gsl_rng*, std::ostream&, std::ostream&);
         // ============== METROPOLIS METHODS
         
         void derived_parameters();
-        void shuffle();
+        void shuffle(gsl_rng*);
         std::istream& read_mat(std::istream& in);
         void reverse_mom();
         void init_omega_table_4();

@@ -24,11 +24,10 @@ int main(int argc, char** argv)
 
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
     gsl_rng_set(engine, time(NULL));
-    arma_rng::set_seed(time(NULL)+10);
 
     // create geometry from input
     Geom24 G(1, 3, 20, -2.5);
-    G.shuffle();
+    G.shuffle(engine);
     
     // action output file
     ofstream out_s;
@@ -41,9 +40,9 @@ int main(int argc, char** argv)
     out_hl.precision(15);
     
     // simulation
-    double ar = G.HMC(100, 0.0005, 100, engine, out_s, out_hl);
-    //G.HMC(100, 0.001, 10, engine, out_s, out_hl);
-    //double ar = G.HMC(100, 0.0005, 90, engine, out_s, out_hl);
+    double dt = 0.004;
+    G.HMC(100, dt, 100, true, engine, out_s, out_hl);
+    double ar = G.HMC(100, dt, 100, false, engine, out_s, out_hl);
     
     out_s.close();
     out_hl.close();

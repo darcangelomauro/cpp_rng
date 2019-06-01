@@ -15,7 +15,6 @@ int main()
 {
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
     gsl_rng_set(engine, 222222);
-    arma_rng::set_seed(111111);
 
     //const double L = 1;
 

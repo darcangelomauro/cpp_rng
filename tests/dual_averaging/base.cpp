@@ -17,9 +17,9 @@ int main()
     gsl_rng_set(engine, 222222);
     arma_rng::set_seed(111111);
 
-    const int p = 2;
+    const int p = 3;
     const int q = 0;
-    const int dim = 30;
+    const int dim = 8;
     const double g2 = -2.5;
 
     // create geometry from input
@@ -30,7 +30,7 @@ int main()
     ofstream out_da_hl_h;
     out_da_hl_h.open("data/base_da_hl_h.txt");
     double dt = 0.05;
-    dt = G1.dual_averaging_HMC(100, dt, 100, engine, out_da_s_h, out_da_hl_h);
+    G1.HMC(100, dt, 100, true, engine, out_da_s_h, out_da_hl_h);
     out_da_s_h.close();
     out_da_hl_h.close();
 
@@ -40,7 +40,7 @@ int main()
     out_s_h.open("data/base_s_h.txt");
     ofstream out_hl_h;
     out_hl_h.open("data/base_hl_h.txt");
-    double ar = G1.HMC(100, dt, 100, engine, out_s_h, out_hl_h);
+    double ar = G1.HMC(100, dt, 100, false, engine, out_s_h, out_hl_h);
     out_s_h.close();
     out_hl_h.close();
     
@@ -54,7 +54,7 @@ int main()
     ofstream out_da_hl_m;
     out_da_hl_m.open("data/base_da_hl_m.txt");
     double scale = 0.05;
-    scale = G2.dual_averaging_MMC(scale, 100, engine, out_da_s_m, out_da_hl_m);
+    G2.MMC(scale, 100, true, engine, out_da_s_m, out_da_hl_m);
     out_da_s_m.close();
     out_da_hl_m.close();
 
@@ -64,7 +64,7 @@ int main()
     out_s_m.open("data/base_s_m.txt");
     ofstream out_hl_m;
     out_hl_m.open("data/base_hl_m.txt");
-    ar = G2.MMC(scale, 100, engine, out_s_m, out_hl_m);
+    ar = G2.MMC(scale, 100, false, engine, out_s_m, out_hl_m);
     out_s_m.close();
     out_hl_m.close();
     

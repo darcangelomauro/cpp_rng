@@ -19,18 +19,18 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = test_dirac test_cliff test_geom test_omega test_omega_table test_derivative test_mom test_leapfrog
+MAIN = test_dirac test_cliff test_geom test_omega test_omega_table test_derivative test_mom
 
 SOURCE = clifford geometry 
 
 # search path for modules
 
-VPATH = ../source
+VPATH = ../../source
 
 
 # additional include directories
 
-INCPATH = ../include /home/pmxmd10/gsl/include
+INCPATH = ../../include /home/pmxmd10/gsl/include
 
 
 # additional libraries to be included 

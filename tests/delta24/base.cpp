@@ -15,7 +15,6 @@ int main()
 {
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
     gsl_rng_set(engine, time(NULL));
-    arma_rng::set_seed(time(NULL)+2);
 
     // create geometry from input
     Geom24 G(2, 2, 20, -2.5);

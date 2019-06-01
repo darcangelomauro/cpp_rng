@@ -16,7 +16,6 @@ int main()
 {
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
     gsl_rng_set(engine, time(NULL));
-    arma_rng::set_seed(time(NULL)+10);
 
     double g = -1.5;
     const double step = -0.15;
@@ -43,8 +42,12 @@ int main()
         out_hl.open(filename_hl);
         out_hl.precision(15);
         
+        // parameter tuning
+        double dt = 0.001;
+        G.HMC(100, dt, 100, true, engine, out_s, out_hl);
         // simulation
-        double ar = G.HMC(100, 0.0001, 100, engine, out_s, out_hl);
+        double ar = G.HMC(100, dt, 100, false, engine, out_s, out_hl);
+
         
         out_s.close();
         out_hl.close();
