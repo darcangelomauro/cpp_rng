@@ -19,9 +19,9 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = base
+MAIN = base produce_f autocorr
 
-SOURCE = clifford geometry 
+SOURCE = clifford geometry utils 
 
 # search path for modules
 

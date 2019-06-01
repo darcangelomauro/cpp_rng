@@ -21,9 +21,9 @@ int main()
     // create geometry from input
     const int p = 0;
     const int q = 3;
-    const int dim = 8;
+    const int dim = 128;
     const double g2 = -2.5;
-    const int iter = 10;
+    const int iter = 100;
 
     Geom24 G1(p, q, dim, g2);
     Geom24 G2(p, q, dim, g2);
@@ -47,7 +47,7 @@ int main()
     clock_t start1 = clock();
     double ar_h = G1.HMC_analytic_test(100, dt, iter, true, engine, vec2_h, vec4_h);
     clock_t start2 = clock();
-    double ar_m = G2.MMC_analytic_test(scale, iter, true, engine, vec2_m, vec4_m);
+    double ar_m = G2.MMC_analytic_test(scale, 0, true, engine, vec2_m, vec4_m);
     clock_t end = clock();
     
     ofstream out_s;
