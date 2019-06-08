@@ -16,18 +16,45 @@ int main()
 {
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
     gsl_rng_set(engine, time(NULL));
-    arma_rng::set_seed(time(NULL)+2);
 
     // create geometry from input
     const int p = 0;
     const int q = 3;
-    const int dim = 128;
+    const int dim = 32;
     const double g2 = -2.5;
     const int iter = 100;
 
     Geom24 G1(p, q, dim, g2);
     Geom24 G2(p, q, dim, g2);
     int c = dim*dim*G1.get_nHL();
+   
+
+    // simulation
+
+    ofstream out_s_h, out_hl_h, out_s_m, out_hl_m;
+    out_s_h.open("data/" + filename_from_data(p, q, dim, g2) + "_S_h.txt");
+    out_hl_h.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_h.txt");
+    out_s_m.open("data/" + filename_from_data(p, q, dim, g2) + "_S_m.txt");
+    out_hl_m.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_m.txt");
+
+    double dt = 0.005;
+    double scale = 0.128;
+
+    clock_t start1 = clock();
+    double ar_h = G1.HMC(100, dt, iter, true, engine, out_s_h, out_hl_h);
+    clock_t start2 = clock();
+    double ar_m = G2.MMC(scale, iter, true, engine, out_s_m, out_hl_m);
+    clock_t end = clock();
+    
+    out_s_h.close();
+    out_hl_h.close();
+    out_s_m.close();
+    out_hl_m.close();
+
+
+
+
+    // thermalization analysis
     
     double* vec2_h = new double [iter];
     double* vec4_h = new double [iter];
@@ -40,18 +67,24 @@ int main()
         vec2_m[i] = 0;
         vec4_m[i] = 0;
     }
-
-    double dt = 0.005;
-    double scale = 0.128;
-
-    clock_t start1 = clock();
-    double ar_h = G1.HMC_analytic_test(100, dt, iter, true, engine, vec2_h, vec4_h);
-    clock_t start2 = clock();
-    double ar_m = G2.MMC_analytic_test(scale, 0, true, engine, vec2_m, vec4_m);
-    clock_t end = clock();
     
+    ifstream in_s_h, in_s_m;
+    in_s_h.open("data/" + filename_from_data(p, q, dim, g2) + "_S_h.txt");
+    in_s_m.open("data/" + filename_from_data(p, q, dim, g2) + "_S_m.txt");
+
+    for(int i=0; i<iter; ++i)
+    {
+        in_s_h >> vec2_h[i] >> vec4_h[i];
+        in_s_m >> vec2_m[i] >> vec4_m[i];
+    }
+
+    in_s_h.close();
+    in_s_m.close();
+            
+
+
     ofstream out_s;
-    out_s.open("data/" + filename_from_data(p, q, dim, g2) + ".txt");
+    out_s.open("data/" + filename_from_data(p, q, dim, g2) + "_dofs.txt");
 
     // calculate average of 2gTrD2 + 4TrD4 based on the last iter/10 samples
     for(int i=0; i<(iter-(iter/10)); ++i)

@@ -28,34 +28,33 @@ int main()
     Geom24 G1(p, q, dim, g2);
     Geom24 G2(p, q, dim, g2);
     
-    int c = dim*dim*G1.get_nHL();
-    
-    double* vec2_h = new double [iter_therm];
-    double* vec4_h = new double [iter_therm];
-    double* vec2_m = new double [iter_therm];
-    double* vec4_m = new double [iter_therm];
-    for(int i=0; i<iter_therm; ++i)
-    {
-        vec2_h[i] = 0;
-        vec4_h[i] = 0;
-        vec2_m[i] = 0;
-        vec4_m[i] = 0;
-    }
-
     double dt = 0.005;
     double scale = 0.128;
 
 
-    // THERMALIZATION + SIMULATION
+    // THERMALIZATION
 
     ofstream out_s_h, out_hl_h, out_s_m, out_hl_m;
+    out_s_h.open("data/" + filename_from_data(p, q, dim, g2) + "_S_therm_h.txt");
+    out_hl_h.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_therm_h.txt");
+    out_s_m.open("data/" + filename_from_data(p, q, dim, g2) + "_S_therm_m.txt");
+    out_hl_m.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_therm_m.txt");
+    
+    G1.HMC(100, dt, iter_therm, true, engine, out_s_h, out_hl_h);
+    G2.MMC(scale, iter_therm, true, engine, out_s_m, out_hl_m);
+
+    out_s_h.close();
+    out_hl_h.close();
+    out_s_m.close();
+    out_hl_m.close();
+
+    
+    // SIMULATION
+    
     out_s_h.open("data/" + filename_from_data(p, q, dim, g2) + "_S_h.txt");
     out_hl_h.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_h.txt");
     out_s_m.open("data/" + filename_from_data(p, q, dim, g2) + "_S_m.txt");
     out_hl_m.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_m.txt");
-    
-    G1.HMC_analytic_test(100, dt, iter_therm, true, engine, vec2_h, vec4_h);
-    G2.MMC_analytic_test(scale, iter_therm, true, engine, vec2_m, vec4_m);
     
     clock_t start1 = clock();
     double ar_h = G1.HMC(100, dt, iter_sim, false, engine, out_s_h, out_hl_h);
@@ -68,32 +67,6 @@ int main()
     out_s_m.close();
     out_hl_m.close();
 
-
-
-    // OUTPUT THERMALIZATION DATA
-
-    ofstream out_s;
-    out_s.open("data/" + filename_from_data(p, q, dim, g2) + "_therm.txt");
-
-    // calculate average of 2gTrD2 + 4TrD4 based on the last iter/10 samples
-    for(int i=0; i<(iter_therm-(iter_therm/10)); ++i)
-    {
-        double res_h = 0;
-        double res_m = 0;
-        for(int j=0; j<iter_therm/10; ++j)
-        {
-            res_h += 2*g2*vec2_h[i+j] + 4*vec4_h[i+j];
-            res_m += 2*g2*vec2_m[i+j] + 4*vec4_m[i+j];
-
-        }
-        out_s << 10*res_h/iter_therm << " " << 10*res_m/iter_therm << " " << c << endl;
-    }
-    out_s.close();
-
-    delete [] vec2_h;
-    delete [] vec4_h;
-    delete [] vec2_m;
-    delete [] vec4_m;
 
     cout << "hmc dt: " << dt << endl;
     cout << "acceptance rate hmc: " << ar_h << endl;

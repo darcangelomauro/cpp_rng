@@ -71,16 +71,14 @@ class Geom24
         void leapfrog(const int&, const double&);
         double HMC_core(const int&, const double&, gsl_rng*, double*, double*);
         double HMC(const int&, double&, const int&, const bool&, gsl_rng*, std::ostream&, std::ostream&);
-        double HMC_analytic_test(const int&, double&, const int&, const bool&, gsl_rng*, double*, double*);
         // ============== HAMILTONIAN METHODS
         
         // ============== METROPOLIS METHODS
         double delta2(const int&, const int&, const int&, const arma::cx_double&);
         double delta4(const int&, const int&, const int&, const arma::cx_double&);
         double delta24(const int&, const int&, const int&, const arma::cx_double&);
-        double MMC_core(const double&, gsl_rng*, const double&, double&);
+        double MMC_core(const double&, gsl_rng*, double*, double*);
         double MMC(double&, const int&, const bool&, gsl_rng*, std::ostream&, std::ostream&);
-        double MMC_analytic_test(double&, const int&, const bool&, gsl_rng*, double*, double*);
         void delta24_debug(const double&, const int&, gsl_rng*, std::ostream&);
         // ============== METROPOLIS METHODS
         
