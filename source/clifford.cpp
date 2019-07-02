@@ -231,8 +231,8 @@ void Cliff::init_gamma()
     vector<Cliff>::const_iterator begin = vec.begin();
     vector<Cliff>::const_iterator end = vec.end();
     
-    for(vector<Cliff>::const_iterator iter = begin; iter != end; ++iter)
-        cout << (*iter) << endl;
+    //for(vector<Cliff>::const_iterator iter = begin; iter != end; ++iter)
+        //cout << (*iter) << endl;
     
     Cliff C1 = (*begin);
 
@@ -271,11 +271,16 @@ Cliff& Cliff::operator*=(const Cliff& C2)
 
 
     // compute chirality
-    int s2 = (q2-p2) % 8;
+    int s2 = (q2-p2+8*p2) % 8;  // +8*p2 is necessary becase % does not mean modulo for negative numbers
     if((s2 % 8) % 2)
     {
+        int s = (q-p+8*p) % 8;
+        cout << "s: " << s << endl;
         cx_mat id1(dim_gamma, dim_gamma, fill::eye);
-        chiral = kron(id1, C2.get_chiral());
+        if((s == 2) || (s == 6))
+            chiral = kron(-1*id1, C2.get_chiral());
+        else
+            chiral = kron(id1, C2.get_chiral());
     }
     else
         chiral = kron(chiral, C2.get_chiral());

@@ -43,8 +43,18 @@ int main()
         cout << endl;
     }
 
-    cout << "chirality:" << endl;
+    cout << "chirality (derived):" << endl;
     C.get_chiral().raw_print();
+    cout << endl;
+
+    cout << "chirality (computed):" << endl;
+    cx_mat chiral(dim, dim, fill::eye);
+    for(int i=0; i<C.get_p()+C.get_q(); ++i)
+        chiral *= C.get_gamma(i);
+    int s = (C.get_q() - C.get_p()) % 8;
+    int exp = s*(s+1)/2;
+    chiral *= pow(cx_double(0,1), exp);
+    chiral.raw_print();
     cout << endl;
 
     cout << "non-vanishing anticommutators:" << endl;
