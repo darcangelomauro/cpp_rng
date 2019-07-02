@@ -33,8 +33,8 @@ Geom24::Geom24(int p_, int q_, int dim_, double g2_)
     }
 
 
-    clog << "Geometry initialized with the following parameters:" << endl;
-    clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
+    //clog << "Geometry initialized with the following parameters:" << endl;
+    //clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
 }
 
 Geom24::Geom24(istream& in)
@@ -59,8 +59,8 @@ Geom24::Geom24(istream& in)
         mom[i].eye(dim, dim); 
     }
     
-    clog << "Geometry initialized with the following parameters:" << endl;
-    clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
+    //clog << "Geometry initialized with the following parameters:" << endl;
+    //clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
 
 }
 
@@ -97,8 +97,8 @@ Geom24::Geom24(const Geom24& G)
         omega_table_4[i] = G.get_omega_table_4(i);
 
     
-    clog << "Geometry initialized with the following parameters:" << endl;
-    clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
+    //clog << "Geometry initialized with the following parameters:" << endl;
+    //clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
 }
 
 // Operator =
@@ -136,8 +136,8 @@ Geom24& Geom24::operator=(const Geom24& G)
     for(int i=0; i<nHL4; i++)
         omega_table_4[i] = G.get_omega_table_4(i);
     
-    clog << "Geometry overwritten with the following parameters:" << endl;
-    clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
+    //clog << "Geometry overwritten with the following parameters:" << endl;
+    //clog << "(p, q, dim, g2) = (" << p << ", " << q << ", " << dim << ", " << g2 << ")" << endl;
     
     return *this;
 }

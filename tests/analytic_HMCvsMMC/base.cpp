@@ -18,11 +18,11 @@ int main()
     gsl_rng_set(engine, time(NULL));
 
     // create geometry from input
-    const int p = 0;
+    const int p = 1;
     const int q = 3;
     const int dim = 32;
     const double g2 = -2.5;
-    const int iter = 100;
+    const int iter = 10;
 
     Geom24 G1(p, q, dim, g2);
     Geom24 G2(p, q, dim, g2);
@@ -43,7 +43,7 @@ int main()
     clock_t start1 = clock();
     double ar_h = G1.HMC(100, dt, iter, true, engine, out_s_h, out_hl_h);
     clock_t start2 = clock();
-    double ar_m = G2.MMC(scale, iter, true, engine, out_s_m, out_hl_m);
+    double ar_m = G2.MMC(scale, 0, true, engine, out_s_m, out_hl_m);
     clock_t end = clock();
     
     out_s_h.close();

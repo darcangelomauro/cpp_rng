@@ -20,12 +20,12 @@ int main()
     // create geometry from input
     const int p = 1;
     const int q = 3;
-    const int dim = 8;
-    const double g2_i = -3.7;
-    const double g2_f = -3.5;
-    const double g2_step = 0.05;
+    const int dim = 32;
+    const double g2_i = -3.8;
+    const double g2_f = -3.3;
+    const double g2_step = 0.1;
     const int iter_therm = 100;
-    const int iter = 100;
+    const int iter = 1000;
 
     double g2 = g2_i;
     double dt = 0.005;
@@ -34,6 +34,7 @@ int main()
         Geom24 G(p, q, dim, g2);
         int c = dim*dim*G.get_nHL();
        
+        cout << "Simulating " << G << endl;
 
         // THERMALIZATION
 

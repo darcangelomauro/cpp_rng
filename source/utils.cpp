@@ -20,6 +20,15 @@ string filename_from_data(const int& p, const int& q, const int& dim, const doub
     return "p" + sp + "q" + sq + "dim" + sdim + "g" + sg2;
 }
 
+string basename_from_data(const int& p, const int& q, const int& dim)
+{
+    string sp = to_string(p);
+    string sq = to_string(q);
+    string sdim = to_string(dim);
+    
+    return "p" + sp + "q" + sq + "dim" + sdim;
+}
+
 void data_from_filename(const string& s, int& p, int& q, int& dim, double& g2)
 {
     string s_p = s.substr(s.find("p")+1, s.find("q")-1);

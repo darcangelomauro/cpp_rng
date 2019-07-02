@@ -19,7 +19,7 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = simul_range
+MAIN = simul_range analysis
 
 SOURCE = clifford geometry utils 
 
