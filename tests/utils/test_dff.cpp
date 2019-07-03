@@ -10,7 +10,7 @@ int main()
     int p, q, dim;
     double g2;
 
-    string s = "p1q3dim64g-3d767.txt";
+    string s = "awfasfabbmvkflrdoeGEOMp1q3dim64g-3d767ddaaaddda.txt";
     
     data_from_filename(s, p, q, dim, g2);
 

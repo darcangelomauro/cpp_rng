@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include "utils.hpp"
+#include "geometry.hpp"
 
 using namespace std;
 
@@ -17,7 +18,7 @@ string filename_from_data(const int& p, const int& q, const int& dim, const doub
     string sg2 = osg2.str();
     replace(sg2.begin(), sg2.end(), '.', 'd');
     
-    return "p" + sp + "q" + sq + "dim" + sdim + "g" + sg2;
+    return "GEOMp" + sp + "q" + sq + "dim" + sdim + "g" + sg2;
 }
 
 string basename_from_data(const int& p, const int& q, const int& dim)
@@ -26,15 +27,34 @@ string basename_from_data(const int& p, const int& q, const int& dim)
     string sq = to_string(q);
     string sdim = to_string(dim);
     
-    return "p" + sp + "q" + sq + "dim" + sdim;
+    return "GEOMp" + sp + "q" + sq + "dim" + sdim;
 }
 
 void data_from_filename(const string& s, int& p, int& q, int& dim, double& g2)
 {
-    string s_p = s.substr(s.find("p")+1, s.find("q")-1);
-    string s_q = s.substr(s.find("q")+1, s.find("d")-s.find("q")-1);
-    string s_dim = s.substr(s.find("m")+1, s.find("g")-s.find("m")-1);
-    string s_g = s.substr(s.find("g")+1, s.find(".")-s.find("g")-1);
+    // generate a clean string s1 from s that
+    // ignores everything before the first appearence
+    // of GEOM (if found)
+    size_t start = s.find("GEOM");
+    string s1;
+    if(start != string::npos)
+        s1 = s.substr(start);
+    else
+        s1 = s;
+
+    // extract data from string.
+    // data is formatted as follows:
+    //
+    // GEOMp[int]q[int]dim[int]g[int]d[int][garbage].txt
+    // 
+    // where [int] denotes an integer numerical value.
+    // the last part g[int]d[int] is a double written as
+    // integer part and decimal part separated by a letter d
+    
+    string s_p = s1.substr(s1.find("p")+1, s1.find("q")-1);
+    string s_q = s1.substr(s1.find("q")+1, s1.find("d")-s1.find("q")-1);
+    string s_dim = s1.substr(s1.find("m")+1, s1.find("g")-s1.find("m")-1);
+    string s_g = s1.substr(s1.find("g")+1, s1.find(".")-s1.find("g")-1);
     replace(s_g.begin(), s_g.end(), 'd', '.');
 
     p = stoi(s_p);
@@ -43,4 +63,49 @@ void data_from_filename(const string& s, int& p, int& q, int& dim, double& g2)
     g2 = stod(s_g);
 }
 
+void thermalization_analysis(const string& path)
+{
+    // extract geometric data
+    int p, q, dim;
+    double g2;
+    data_from_filename(path, p, q, dim, g2);
+        
+    
+    // read quadratic and quartic part from file
+    // and store separately in vectors
+    ifstream in_s;
+    in_s.open(path + "_S_therm.txt");
+    
+    vector<double> vec2;
+    vector<double> vec4;
+    double temp2, temp4;
 
+    while(in_s >> temp2 >> temp4)
+    {
+        vec2.push_back(temp2);
+        vec4.push_back(temp4);
+    }
+    size_t len = vec2.size();
+
+    in_s.close();
+
+    
+    // calculate dofs
+    Geom24 G(p, q, 1, 1);
+    int c = dim*dim*G.get_nHL();
+
+    // calculate average of 2gTrD2 + 4TrD4 based on the last
+    // 1/10th of samples and store it in path_dofs.txt
+    ofstream out_dofs;
+    out_dofs.open(path + "_dofs.txt");
+
+    for(size_t i=0; i<(len-(len/10)); ++i)
+    {
+        double res = 0;
+        for(size_t j=0; j<len/10; ++j)
+            res += 2*g2*vec2[i+j] + 4*vec4[i+j];
+
+        out_dofs << 10*res/len << " " << c << endl;
+    }
+    out_dofs.close();
+}
