@@ -3,9 +3,9 @@
 
 #include <string>
 
-std::string filename_from_data(const int&, const int&, const int&, const double&);
-std::string basename_from_data(const int&, const int&, const int&);
-void data_from_filename(const std::string&, int&, int&, int&, double&);
+std::string filename_from_data(const int&, const int&, const int&, const double&, const std::string&);
+std::string basename_from_data(const int&, const int&, const int&, const std::string&);
+void data_from_filename(const std::string&, int&, int&, int&, double&, const std::string&);
 void thermalization_analysis(const std::string&);
 
 #endif

@@ -19,10 +19,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    string prefix = "GEOM";
+
     int p = stoi(argv[1]);
     int q = stoi(argv[2]);
     int dim = stoi(argv[3]);
-    string basename = basename_from_data(p, q, dim);
+    string basename = basename_from_data(p, q, dim, prefix);
     
     double g2 = stod(argv[4]);
     double g2_end = stod(argv[5]);
@@ -39,7 +41,7 @@ int main(int argc, char** argv)
     while(g2 <= g2_end)
     {
         ifstream in_s, in_hl;
-        string filename = filename_from_data(p, q, dim, g2);
+        string filename = filename_from_data(p, q, dim, g2, prefix);
         in_s.open("data/" + filename + "_S.txt");
         in_hl.open("data/" + filename + "_HL.txt");
 

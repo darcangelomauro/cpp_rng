@@ -21,7 +21,7 @@ all: rmxeq mkdep mkxeq
 
 MAIN = test_dff
 
-SOURCE = utils 
+SOURCE = utils geometry clifford 
 
 # search path for modules
 

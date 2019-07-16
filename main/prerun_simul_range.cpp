@@ -12,22 +12,11 @@ using namespace std;
 using namespace arma;
 
 
-int main(int argc, char** argv)
+int main()
 {
-    // convert parameter list to unsigned long
-    if(argc != 3)
-    {
-        cerr << "Need to pass global seed and local rank" << endl;
-        return 0;
-    }
-    
-    unsigned long global_seed = stoul(argv[1]);
-    unsigned long local_rank = stoul(argv[2]);
-   
-
     // initialize random number generator
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
-    gsl_rng_set(engine, global_seed+local_rank);
+    gsl_rng_set(engine, time(NULL));
 
 
 
@@ -44,7 +33,6 @@ int main(int argc, char** argv)
     const int L = 100;
     double dt = 0.005;
     const int iter_therm = 100;
-    const int iter_simul = 1000;
     
     // coupling constant
     const double g2_i = -3.8;
@@ -56,7 +44,8 @@ int main(int argc, char** argv)
 
 
 
-    string prefix = "GEOM";
+
+    string prefix = "HAMIL";
     double g2 = g2_i;
     while(g2 < g2_f)
     {
@@ -67,7 +56,7 @@ int main(int argc, char** argv)
         string path = "data/" + filename_from_data(p, q, dim, g2, prefix);
 
 
-        // THERMALIZATION
+        // PRELIMINARY RUN
 
         ofstream out_s, out_hl;
         out_s.open(path + "_S_therm.txt");
@@ -78,24 +67,7 @@ int main(int argc, char** argv)
         out_s.close();
         out_hl.close();
        
-        thermalization_analysis(path);
-
-
-        // SIMULATION
-
-        out_s.open(path + "_S.txt");
-        out_hl.open(path + "_HL.txt");
-
-        clock_t start1 = clock();
-        double ar = G.HMC(L, dt, iter_simul, false, engine, out_s, out_hl);
-        clock_t end = clock();
-
-        out_s.close();
-        out_hl.close();
-
-
-        cout << "acceptance rate hmc: " << ar << endl;
-        cout << "time hmc: " << (double)(end-start1)/(double)CLOCKS_PER_SEC << endl;
+        cout << "dt: " << dt << endl;
 
         g2 += g2_step;
     }

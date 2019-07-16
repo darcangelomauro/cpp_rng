@@ -3,11 +3,12 @@
 #include <algorithm>
 #include "utils.hpp"
 #include "geometry.hpp"
+#include "clifford.hpp"
 
 using namespace std;
 
 
-string filename_from_data(const int& p, const int& q, const int& dim, const double& g2)
+string filename_from_data(const int& p, const int& q, const int& dim, const double& g2, const string& prefix)
 {
     string sp = to_string(p);
     string sq = to_string(q);
@@ -18,24 +19,24 @@ string filename_from_data(const int& p, const int& q, const int& dim, const doub
     string sg2 = osg2.str();
     replace(sg2.begin(), sg2.end(), '.', 'd');
     
-    return "GEOMp" + sp + "q" + sq + "dim" + sdim + "g" + sg2;
+    return prefix + "p" + sp + "q" + sq + "dim" + sdim + "g" + sg2;
 }
 
-string basename_from_data(const int& p, const int& q, const int& dim)
+string basename_from_data(const int& p, const int& q, const int& dim, const string& prefix)
 {
     string sp = to_string(p);
     string sq = to_string(q);
     string sdim = to_string(dim);
     
-    return "GEOMp" + sp + "q" + sq + "dim" + sdim;
+    return prefix + "p" + sp + "q" + sq + "dim" + sdim;
 }
 
-void data_from_filename(const string& s, int& p, int& q, int& dim, double& g2)
+void data_from_filename(const string& s, int& p, int& q, int& dim, double& g2, const string& prefix)
 {
     // generate a clean string s1 from s that
     // ignores everything before the first appearence
-    // of GEOM (if found)
-    size_t start = s.find("GEOM");
+    // of prefix (if found)
+    size_t start = s.find(prefix);
     string s1;
     if(start != string::npos)
         s1 = s.substr(start);
@@ -63,12 +64,17 @@ void data_from_filename(const string& s, int& p, int& q, int& dim, double& g2)
     g2 = stod(s_g);
 }
 
+
+
+
+
 void thermalization_analysis(const string& path)
 {
     // extract geometric data
     int p, q, dim;
     double g2;
-    data_from_filename(path, p, q, dim, g2);
+    string prefix = "GEOM";
+    data_from_filename(path, p, q, dim, g2, prefix);
         
     
     // read quadratic and quartic part from file
