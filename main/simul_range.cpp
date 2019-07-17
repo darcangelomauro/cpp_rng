@@ -69,8 +69,8 @@ int main(int argc, char** argv)
     // FOLDERS:
     // The common folder name for all jobs is of the form yyyymmdd,
     // and should already exist.
-    // The output of each job is stored in yyyymmdd/local_rank, which
-    // doesn't exist and it's created here.
+    // The output of each job is stored in yyyymmdd/local_rank,
+    // which is created here.
     string foldername = foldername_from_time(global_seed);
     string localpath = foldername + argv[2] + "/";
     if(mkdir((localpath).c_str(), 0777))
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
         cerr << "Error: local folder couldn't be created." << endl;
         cerr << "Possible causes:" << endl;
         cerr << "1) The folder " + foldername + " does not exist." << endl;
-        cerr << "2) The folder " + localpath + "/ already exists." << endl;
+        cerr << "2) The folder " + localpath + " already exists." << endl;
         return 0;
     }
 
