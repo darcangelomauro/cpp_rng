@@ -742,19 +742,23 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, const bool& duav,
         // core part of HMC
         Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
         
-
-        // print S2 and S4
-        out_s << en_f[0] << " " << en_f[1] << endl;
-        
-        // print mat
-        for(int j=0; j<nHL; ++j)
+        // print every sweep if thermalization,
+        // otherwise every 100 sweeps
+        if(duav || !(i % 100))
         {
-            for(int k=0; k<dim; ++k)
+            // print S2 and S4
+            out_s << en_f[0] << " " << en_f[1] << endl;
+            
+            // print mat
+            for(int j=0; j<nHL; ++j)
             {
-                for(int l=0; l<dim; ++l)
-                    out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+                for(int k=0; k<dim; ++k)
+                {
+                    for(int l=0; l<dim; ++l)
+                        out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+                }
+                out_hl << endl;
             }
-            out_hl << endl;
         }
 
 
