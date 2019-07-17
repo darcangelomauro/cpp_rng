@@ -668,7 +668,7 @@ double Geom24::HMC_core(const int& Nt, const double& dt, gsl_rng* engine, double
     
     // sometimes leapfrog diverges and Hf becomes nan.
     // so first of all address this case
-    if(isnan(en_f[3]))
+    if(std::isnan(en_f[3]))
     {
         e = 0;
         // restore old configuration
