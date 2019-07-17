@@ -1,6 +1,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <ctime>
 #include "utils.hpp"
 #include "geometry.hpp"
 #include "clifford.hpp"
@@ -65,6 +66,26 @@ void data_from_filename(const string& s, int& p, int& q, int& dim, double& g2, c
 }
 
 
+string foldername_from_time(const time_t& t)
+{
+    tm* timePtr = localtime(&t);
+
+    string day;
+    if(timePtr->tm_mday < 10)
+        day = "0" + to_string(timePtr->tm_mday);
+    else
+        day = to_string(timePtr->tm_mday);
+    
+    string month;
+    if(timePtr->tm_mon < 9)
+        month = "0" + to_string(timePtr->tm_mon + 1);
+    else
+        month =to_string(timePtr->tm_mon);
+
+    string year = to_string(timePtr->tm_year + 1900);
+
+    return year+month+day+"/";
+}
 
 
 

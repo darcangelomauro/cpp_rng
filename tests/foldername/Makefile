@@ -19,18 +19,18 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = simul_range analysis
+MAIN = base
 
-SOURCE = clifford geometry utils 
+SOURCE = clifford geometry utils
 
 # search path for modules
 
-VPATH = ../source
+VPATH = ../../source
 
 
 # additional include directories
 
-INCPATH = ../include /home/pmxmd10/gsl/include
+INCPATH = ../../include /home/pmxmd10/gsl/include
 
 
 # additional libraries to be included 
