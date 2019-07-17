@@ -116,6 +116,7 @@ int main(int argc, char** argv)
     double num = (sm.g2_f - sm.g2_i)/sm.g2_step;
     clog << "Starting simulation in g2 range: ";
     clog << "[" << sm.g2_i << " : " << sm.g2_f << "), " << int(num) << " uniformly distributed values" << endl;
+    clog << "Local seed: " << global_seed+local_rank << endl;
     clog << endl;
     
     string prefix = "GEOM";
