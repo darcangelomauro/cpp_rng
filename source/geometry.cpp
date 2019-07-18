@@ -819,6 +819,9 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine)
 // - Measurements are taken "gap" iterations apart
 double Geom24::HMC(const int& Nt, const double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
+    // return value
+    double Stat = 0;
+
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
     double* en_f = new double [4];
@@ -1074,6 +1077,9 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine)
 // - Measurements are taken "gap" iterations apart
 double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
+    // return value
+    double Stat = 0;
+    
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
     double* s_f = new double [2];
