@@ -28,6 +28,7 @@ struct Simul_params
     // Other parameters
     int iter_therm;
     int iter_simul;
+    int gap;
     double g2_i;
     double g2_f;
     double g2_step;
@@ -100,7 +101,7 @@ int main(int argc, char** argv)
     if(!params_validity(sm))
     {
         cerr << "Error: file " + foldername + "init.txt is probably not formatted in the correct way." << endl;
-        cerr << "The correct formatting is p:q:dim:L:dt:iter_therm:iter_simul:g2_i:g2_f:g2_step:" << endl;
+        cerr << "The correct formatting is p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:" << endl;
         cerr << "Validity string:          " << sm.valid << endl;
         return 0;
     }
@@ -132,28 +133,20 @@ int main(int argc, char** argv)
 
         // THERMALIZATION
 
-        ofstream out_s, out_hl;
-        out_s.open(filename + "_S_therm.txt");
-        out_hl.open(filename + "_HL_therm.txt");
-
         clog << "Thermalization start timestamp: " << time(NULL) << endl;
-        G.HMC(sm.L, sm.dt, sm.iter_therm, true, engine, out_s, out_hl);
+        G.HMC(sm.L, sm.dt, sm.iter_therm, engine);
         clog << "Thermalization end timestamp: " << time(NULL) << endl;
         clog << "Integration step: " << sm.dt << endl;
         
-        out_s.close();
-        out_hl.close();
-       
-        thermalization_analysis(filename);
-
 
         // SIMULATION
 
+        ofstream out_s, out_hl;
         out_s.open(filename + "_S.txt");
         out_hl.open(filename + "_HL.txt");
 
         clog << "Simulation start timestamp: " << time(NULL) << endl;
-        double ar = G.HMC(sm.L, sm.dt, sm.iter_simul, false, engine, out_s, out_hl);
+        double ar = G.HMC(sm.L, sm.dt, sm.iter_simul, sm.gap, engine, out_s, out_hl);
         clog << "Simulation end timestamp: " << time(NULL) << endl;
 
         out_s.close();
@@ -195,6 +188,8 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
         sm.valid += temp;
         in >> temp >> sm.iter_simul;
         sm.valid += temp;
+        in >> temp >> sm.gap;
+        sm.valid += temp;
         in >> temp >> sm.g2_i;
         sm.valid += temp;
         in >> temp >> sm.g2_f;
@@ -210,5 +205,5 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
 
 bool params_validity(struct Simul_params& sm)
 {
-    return sm.valid == "p:q:dim:L:dt:iter_therm:iter_simul:g2_i:g2_f:g2_step:";
+    return sm.valid == "p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:";
 }
