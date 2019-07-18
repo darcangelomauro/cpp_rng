@@ -41,8 +41,8 @@ int main(int argc, char** argv)
     
     // simulation
     double dt = 0.004;
-    G.HMC(100, dt, 100, true, engine, out_s, out_hl);
-    double ar = G.HMC(100, dt, 100, false, engine, out_s, out_hl);
+    G.HMC(100, dt, 100, engine);
+    double ar = G.HMC(100, dt, 100, 1, engine, out_s, out_hl);
     
     out_s.close();
     out_hl.close();

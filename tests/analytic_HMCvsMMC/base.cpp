@@ -18,9 +18,9 @@ int main()
     gsl_rng_set(engine, time(NULL));
 
     // create geometry from input
-    const int p = 1;
+    const int p = 0;
     const int q = 3;
-    const int dim = 32;
+    const int dim = 16;
     const double g2 = -2.5;
     const int iter = 10;
 
@@ -31,25 +31,21 @@ int main()
 
     // simulation
 
-    ofstream out_s_h, out_hl_h, out_s_m, out_hl_m;
-    out_s_h.open("data/" + filename_from_data(p, q, dim, g2) + "_S_h.txt");
-    out_hl_h.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_h.txt");
-    out_s_m.open("data/" + filename_from_data(p, q, dim, g2) + "_S_m.txt");
-    out_hl_m.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_m.txt");
+    ofstream out_s_h, out_s_m;
+    out_s_h.open("data/" + filename_from_data(p, q, dim, g2, "HMC") + "_S.txt");
+    out_s_m.open("data/" + filename_from_data(p, q, dim, g2, "MMC") + "_S.txt");
 
     double dt = 0.005;
     double scale = 0.128;
 
     clock_t start1 = clock();
-    double ar_h = G1.HMC(100, dt, iter, true, engine, out_s_h, out_hl_h);
+    double ar_h = G1.HMC(100, dt, iter, engine, out_s_h);
     clock_t start2 = clock();
-    double ar_m = G2.MMC(scale, 0, true, engine, out_s_m, out_hl_m);
+    double ar_m = G2.MMC(scale, iter, engine, out_s_m);
     clock_t end = clock();
     
     out_s_h.close();
-    out_hl_h.close();
     out_s_m.close();
-    out_hl_m.close();
 
 
 
@@ -69,8 +65,8 @@ int main()
     }
     
     ifstream in_s_h, in_s_m;
-    in_s_h.open("data/" + filename_from_data(p, q, dim, g2) + "_S_h.txt");
-    in_s_m.open("data/" + filename_from_data(p, q, dim, g2) + "_S_m.txt");
+    in_s_h.open("data/" + filename_from_data(p, q, dim, g2, "HMC") + "_S.txt");
+    in_s_m.open("data/" + filename_from_data(p, q, dim, g2, "MMC") + "_S.txt");
 
     for(int i=0; i<iter; ++i)
     {
@@ -84,7 +80,7 @@ int main()
 
 
     ofstream out_s;
-    out_s.open("data/" + filename_from_data(p, q, dim, g2) + "_dofs.txt");
+    out_s.open("data/" + filename_from_data(p, q, dim, g2, "") + "_dofs.txt");
 
     // calculate average of 2gTrD2 + 4TrD4 based on the last iter/10 samples
     for(int i=0; i<(iter-(iter/10)); ++i)

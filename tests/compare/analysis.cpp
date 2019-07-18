@@ -53,7 +53,7 @@ int main(int argc, char** argv)
                 vector<double>::const_iterator begin(sval.begin());
                 vector<double>::const_iterator end(sval.end());
 
-                out_s << g << " " << accumulate(begin+Nsw/2, end, 0.0)/(Nsw/2) << endl;
+                out_s << g << " " << accumulate(begin, end, 0.0)/Nsw << endl;
             }
             else
             {
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
                 vector<double>::const_iterator begin(fval.begin());
                 vector<double>::const_iterator end(fval.end());
 
-                out_f << g << " " << accumulate(begin+Nsw/2, end, 0.0)/(Nsw/2) << endl;
+                out_f << g << " " << accumulate(begin, end, 0.0)/Nsw << endl;
             }
             else
             {

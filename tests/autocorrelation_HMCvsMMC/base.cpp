@@ -35,13 +35,11 @@ int main()
     // THERMALIZATION
 
     ofstream out_s_h, out_hl_h, out_s_m, out_hl_m;
-    out_s_h.open("data/" + filename_from_data(p, q, dim, g2) + "_S_therm_h.txt");
-    out_hl_h.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_therm_h.txt");
-    out_s_m.open("data/" + filename_from_data(p, q, dim, g2) + "_S_therm_m.txt");
-    out_hl_m.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_therm_m.txt");
+    out_s_h.open("data/" + filename_from_data(p, q, dim, g2, "HMC") + "_S_therm.txt");
+    out_s_m.open("data/" + filename_from_data(p, q, dim, g2, "MMC") + "_S_therm.txt");
     
-    G1.HMC(100, dt, iter_therm, true, engine, out_s_h, out_hl_h);
-    G2.MMC(scale, iter_therm, true, engine, out_s_m, out_hl_m);
+    G1.HMC(100, dt, iter_therm, engine, out_s_h);
+    G2.MMC(scale, iter_therm, engine, out_s_m);
 
     out_s_h.close();
     out_hl_h.close();
@@ -51,15 +49,15 @@ int main()
     
     // SIMULATION
     
-    out_s_h.open("data/" + filename_from_data(p, q, dim, g2) + "_S_h.txt");
-    out_hl_h.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_h.txt");
-    out_s_m.open("data/" + filename_from_data(p, q, dim, g2) + "_S_m.txt");
-    out_hl_m.open("data/" + filename_from_data(p, q, dim, g2) + "_HL_m.txt");
+    out_s_h.open("data/" + filename_from_data(p, q, dim, g2, "HMC") + "_S.txt");
+    out_hl_h.open("data/" + filename_from_data(p, q, dim, g2, "HMC") + "_HL.txt");
+    out_s_m.open("data/" + filename_from_data(p, q, dim, g2, "MMC") + "_S.txt");
+    out_hl_m.open("data/" + filename_from_data(p, q, dim, g2, "MMC") + "_HL.txt");
     
     clock_t start1 = clock();
-    double ar_h = G1.HMC(100, dt, iter_sim, false, engine, out_s_h, out_hl_h);
+    double ar_h = G1.HMC(100, dt, iter_sim, 1, engine, out_s_h, out_hl_h);
     clock_t start2 = clock();
-    double ar_m = G2.MMC(scale, iter_sim, false, engine, out_s_m, out_hl_m);
+    double ar_m = G2.MMC(scale, iter_sim, 1, engine, out_s_m, out_hl_m);
     clock_t end = clock();
     
     out_s_h.close();

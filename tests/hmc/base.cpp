@@ -21,11 +21,13 @@ int main()
     
     ofstream out_s;
     out_s.open("data/base_s.txt");
+    double dt = 0.001;
+    G.HMC(100, dt, 100, engine, out_s);
+    out_s.close();
+    out_s.open("data/base_s.txt");
     ofstream out_hl;
     out_hl.open("data/base_hl.txt");
-    double dt = 0.001;
-    G.HMC(100, dt, 100, true, engine, out_s, out_hl);
-    double ar = G.HMC(100, dt, 100, false, engine, out_s, out_hl);
+    double ar = G.HMC(100, dt, 100, 1, engine, out_s, out_hl);
     out_s.close();
     out_hl.close();
 
