@@ -70,7 +70,9 @@ class Geom24
         double calculate_H() const;
         void leapfrog(const int&, const double&);
         double HMC_core(const int&, const double&, gsl_rng*, double*, double*);
-        double HMC(const int&, double&, const int&, const bool&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC(const int&, double&, const int&, gsl_rng*, std::ostream&);
+        double HMC(const int&, double&, const int&, gsl_rng*);
+        double HMC(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
         // ============== HAMILTONIAN METHODS
         
         // ============== METROPOLIS METHODS

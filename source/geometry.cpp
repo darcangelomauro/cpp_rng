@@ -707,13 +707,17 @@ double Geom24::HMC_core(const int& Nt, const double& dt, gsl_rng* engine, double
 }
 
 
-double Geom24::HMC(const int& Nt, double& dt, const int& iter, const bool& duav, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+// HMC routine for preliminary run.
+// - Performs dual averaging on dt
+// - Outputs S2 and S4 to allow dofs analysis
+// - Measurements are taken 1 iteration apart
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, ostream& out_s)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
     double* en_f = new double [4];
 
-    // dual averaging variables
+    // dual averaging variables for dt
     double Stat = 0;
     double mu = log(10*dt);
     double shr = 0.05;
@@ -721,6 +725,104 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, const bool& duav,
     double kappa = 0.75;
     double log_dt_avg = log(dt);
     
+    // iter repetitions of leapfrog
+    for(int i=0; i<iter; ++i)
+    {
+        // if it's not the first interation set potential to
+        // previous final value, otherwise compute it
+        if(i)
+        {
+            en_i[0] = en_f[0];
+            en_i[1] = en_f[1];
+        }
+        else
+        {
+            en_i[0] = dirac2();
+            en_i[1] = dirac4();
+        }
+
+        
+        // core part of HMC
+        Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
+        
+        // print S2 and S4
+        out_s << en_f[0] << " " << en_f[1] << endl;
+
+        // perform dual averaging on dt
+        double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+        dt = exp(log_dt);
+        double eta = pow(i+1, -kappa);
+        log_dt_avg = eta*log_dt + (1-eta)*log_dt_avg;
+    }
+
+    // set dt on its final dual averaged value
+    dt = exp(log_dt_avg);
+
+
+    delete [] en_i;
+    delete [] en_f;
+
+    return (0.65 - Stat/iter);
+}
+
+
+// HMC routine for thermalization run
+// - Performs simple averaging on dt (just to help the thermalization process)
+// - Doesn't output anything because nobody cares
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine)
+{
+    // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
+    double* en_i = new double [4];
+    double* en_f = new double [4];
+
+    // simple averaging variables
+    double Stat = 0;
+    double mu = log(10*dt);
+    double shr = 0.05;
+    int i0 = 10;
+    
+    // iter repetitions of leapfrog
+    for(int i=0; i<iter; ++i)
+    {
+        // if it's not the first interation set potential to
+        // previous final value, otherwise compute it
+        if(i)
+        {
+            en_i[0] = en_f[0];
+            en_i[1] = en_f[1];
+        }
+        else
+        {
+            en_i[0] = dirac2();
+            en_i[1] = dirac4();
+        }
+
+        
+        // core part of HMC
+        Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
+        
+        // perform simple averaging
+        double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+        dt = exp(log_dt);
+    }
+
+    delete [] en_i;
+    delete [] en_f;
+
+    return (0.65 - Stat/iter);
+}
+
+
+// HMC routine for simulation run
+// - Doesn't perform any kind of averaging on dt
+// - Outputs S2, S4, H, L
+// - Measurements are taken "gap" iterations apart
+double Geom24::HMC(const int& Nt, const double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+{
+    // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
+    double* en_i = new double [4];
+    double* en_f = new double [4];
+
     // iter repetitions of leapfrog
     for(int i=0; i<iter; ++i)
     {
@@ -742,9 +844,8 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, const bool& duav,
         // core part of HMC
         Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
         
-        // print every sweep if thermalization,
-        // otherwise every 100 sweeps
-        if(duav || !(i % 100))
+        // print every "gap" iteration
+        if( !(i%gap) )
         {
             // print S2 and S4
             out_s << en_f[0] << " " << en_f[1] << endl;
@@ -760,28 +861,16 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, const bool& duav,
                 out_hl << endl;
             }
         }
-
-
-        // perform dual averaging if duav is true
-        if(duav)
-        {
-            double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
-            dt = exp(log_dt);
-            double eta = pow(i+1, -kappa);
-            log_dt_avg = eta*log_dt + (1-eta)*log_dt_avg;
-        }
-
     }
-
-    if(duav)
-        dt = exp(log_dt_avg);
-
 
     delete [] en_i;
     delete [] en_f;
 
     return (0.65 - Stat/iter);
 }
+
+
+
 
 
 double Geom24::MMC_core(const double& scale, gsl_rng* engine, double* s_i, double* s_f)
