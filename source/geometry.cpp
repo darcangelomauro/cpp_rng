@@ -952,7 +952,11 @@ double Geom24::MMC_core(const double& scale, gsl_rng* engine, double* s_i, doubl
         
 
 
-double Geom24::MMC(double& scale, const int& iter, const bool& duav, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+// MMC routine for preliminary run.
+// - Performs dual averaging on scale
+// - Outputs S2 and S4 to allow dofs analysis
+// - Measurements are taken 1 iteration apart
+double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, ostream& out_s)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -990,36 +994,20 @@ double Geom24::MMC(double& scale, const int& iter, const bool& duav, gsl_rng* en
             
             Stat += 0.232 - MMC_core(scale, engine, s_i, s_f);
         
-            // perform dual averaging if duav is ture
-            if(duav)
-            {
-                double log_scale = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
-                scale = exp(log_scale);
-                double eta = pow(i+1, -kappa);
-                log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
-            }
+            // perform dual averaging
+            double log_scale = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+            scale = exp(log_scale);
+            double eta = pow(i+1, -kappa);
+            log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
         }
 
         
-        // print after a complete sweep
-    
-        // action2 and action4
+        // print action2 and action4
         out_s << s_f[0] << " " << s_f[1] << endl; 
-
-        // mat
-        for(int j=0; j<nHL; ++j)
-        {
-            for(int k=0; k<dim; ++k)
-            {
-                for(int l=0; l<dim; ++l)
-                    out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
-            }
-            out_hl << endl;
-        }
     }
     
-    if(duav)
-        scale = exp(log_scale_avg);
+    // set scale on its final dual averaged value
+    scale = exp(log_scale_avg);
     
     delete [] s_i;
     delete [] s_f;
@@ -1028,8 +1016,118 @@ double Geom24::MMC(double& scale, const int& iter, const bool& duav, gsl_rng* en
 }
 
 
+// MMC routine for thermalization run
+// - Performs simple averaging on scale (just to help the thermalization process)
+// - Doesn't output anything because nobody cares
+double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine)
+{
+    // initial (_i) and final (_f) action2 and action4 
+    double* s_i = new double [2];
+    double* s_f = new double [2];
+
+    // calculate length of a sweep in terms of dofs
+    int Nsw = nHL*dim*dim;
+
+    // simple averaging variables
+    double Stat = 0;
+    double mu = log(10*scale);
+    double shr = 0.05;
+    int i0 = 10;
+
+    // iter sweeps of metropolis
+    for(int i=0; i<iter; ++i)
+    {
+        for(int j=0; j<Nsw; ++j)
+        {
+            // set action to previous final value,
+            // unless it's the first iteration
+            if(j)
+            {
+                s_i[0] = s_f[0];
+                s_i[1] = s_f[1];
+            }
+            else
+            {
+                s_i[0] = dirac2();
+                s_i[1] = dirac4();
+            }
+
+            
+            Stat += 0.232 - MMC_core(scale, engine, s_i, s_f);
+        
+            // perform simple averaging
+            double log_scale = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+            scale = exp(log_scale);
+        }
+    }
+    
+    delete [] s_i;
+    delete [] s_f;
+
+    return (0.232 - Stat/(iter*Nsw));
+}
 
 
+// MMC routine for simulation run
+// - Doesn't perform any kind of averaging on scale
+// - Outputs S2, S4, H, L
+// - Measurements are taken "gap" iterations apart
+double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+{
+    // initial (_i) and final (_f) action2 and action4 
+    double* s_i = new double [2];
+    double* s_f = new double [2];
+
+    // calculate length of a sweep in terms of dofs
+    int Nsw = nHL*dim*dim;
+
+    // iter sweeps of metropolis
+    for(int i=0; i<iter; ++i)
+    {
+        for(int j=0; j<Nsw; ++j)
+        {
+            // set action to previous final value,
+            // unless it's the first iteration
+            if(j)
+            {
+                s_i[0] = s_f[0];
+                s_i[1] = s_f[1];
+            }
+            else
+            {
+                s_i[0] = dirac2();
+                s_i[1] = dirac4();
+            }
+
+            
+            Stat += 0.232 - MMC_core(scale, engine, s_i, s_f);
+        }
+
+        
+        // print every "gap" iteration
+        if( !(i%gap) )
+        {
+            // action2 and action4
+            out_s << s_f[0] << " " << s_f[1] << endl; 
+
+            // mat
+            for(int j=0; j<nHL; ++j)
+            {
+                for(int k=0; k<dim; ++k)
+                {
+                    for(int l=0; l<dim; ++l)
+                        out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+                }
+                out_hl << endl;
+            }
+        }
+    }
+    
+    delete [] s_i;
+    delete [] s_f;
+
+    return (0.232 - Stat/(iter*Nsw));
+}
 
 cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int& i4, const double& cliff, const bool& neg) const
 {

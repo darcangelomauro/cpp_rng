@@ -80,7 +80,9 @@ class Geom24
         double delta4(const int&, const int&, const int&, const arma::cx_double&);
         double delta24(const int&, const int&, const int&, const arma::cx_double&);
         double MMC_core(const double&, gsl_rng*, double*, double*);
-        double MMC(double&, const int&, const bool&, gsl_rng*, std::ostream&, std::ostream&);
+        double MMC(double&, const int&, gsl_rng*, std::ostream&);
+        double MMC(double&, const int&, gsl_rng*);
+        double MMC(const double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
         void delta24_debug(const double&, const int&, gsl_rng*, std::ostream&);
         // ============== METROPOLIS METHODS
         
