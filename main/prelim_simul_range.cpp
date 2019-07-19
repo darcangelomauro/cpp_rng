@@ -59,9 +59,9 @@ int main(int argc, char** argv)
    
 
     // RNG:
-    // Initialize random number generator with global_seed
+    // Initialize random number generator with global_seed-1
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd2);
-    gsl_rng_set(engine, global_seed);
+    gsl_rng_set(engine, global_seed-1);
 
 
     //********* BEGIN PARAMETER INITIALIZATION **********//

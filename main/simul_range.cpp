@@ -112,13 +112,13 @@ int main(int argc, char** argv)
         // Create geometry
         Geom24 G(sm.p, sm.q, sm.dim, g2);
         clog << G << endl;
+        clog << "RNG seed: " << global_seed+local_rank << endl;
 
 
         // THERMALIZATION
         clog << "Thermalization start timestamp: " << time(NULL) << endl;
         G.HMC(sm.L, sm.dt, sm.iter_therm, engine);
         clog << "Thermalization end timestamp: " << time(NULL) << endl;
-        clog << "Integration step: " << sm.dt << endl;
 
 
         // SIMULATION
@@ -136,6 +136,7 @@ int main(int argc, char** argv)
         out_s.close();
         out_hl.close();
 
+        clog << "Integration step: " << sm.dt << endl;
         clog << "Acceptance rate: " << ar << endl;
         clog << endl;
 
