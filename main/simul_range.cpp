@@ -99,6 +99,7 @@ int main(int argc, char** argv)
 
 
     //********* BEGIN MONTE CARLO **********//
+    clog << "RNG seed: " << global_seed+local_rank << endl << endl;
 
     // Open file with precomputed dt values for each g2
     string dt_filename = localpath + "dt.tmp";
@@ -112,7 +113,6 @@ int main(int argc, char** argv)
         // Create geometry
         Geom24 G(sm.p, sm.q, sm.dim, g2);
         clog << G << endl;
-        clog << "RNG seed: " << global_seed+local_rank << endl;
 
 
         // THERMALIZATION
