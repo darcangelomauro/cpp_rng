@@ -67,40 +67,26 @@ int main(int argc, char** argv)
     gsl_rng_set(engine, global_seed+local_rank);
 
 
-    // FOLDERS:
-    // The common folder name for all jobs is of the form yyyymmdd,
-    // and should already exist.
-    // The output of each job is stored in yyyymmdd/local_rank,
-    // which is created here.
-    string foldername = foldername_from_time(global_seed);
-    string localpath = foldername + argv[2] + "/";
-    if(mkdir((localpath).c_str(), 0777))
-    {
-        cerr << "Error: local folder couldn't be created." << endl;
-        cerr << "Possible causes:" << endl;
-        cerr << "1) The folder " + foldername + " does not exist." << endl;
-        cerr << "2) The folder " + localpath + " already exists." << endl;
-        return 0;
-    }
-
-
     //********* BEGIN PARAMETER INITIALIZATION **********//
     
-    // Read simulation parameters from file yyyymmdd/init.txt
-    
+    // Read simulation parameters from file yyyymmdd/local_rank/init.tmp
+    string foldername = foldername_from_time(global_seed);
+    string localpath = foldername + argv[2] + "/";
+    string init_filename = localpath + "init.tmp";
+
     struct Simul_params sm;
     ifstream in_init;
-    in_init.open(foldername + "init.txt");
+    in_init.open(init_filename);
     
     if(!read_init_stream(in_init, sm))
     {
-        cerr << "Error: couldn't read file " + foldername + "init.txt" << endl;
+        cerr << "Error: couldn't read file " + init_filename << endl;
         return 0;
     }
 
     if(!params_validity(sm))
     {
-        cerr << "Error: file " + foldername + "init.txt is probably not formatted in the correct way." << endl;
+        cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
         cerr << "The correct formatting is p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:" << endl;
         cerr << "Validity string:          " << sm.valid << endl;
         return 0;
@@ -114,36 +100,34 @@ int main(int argc, char** argv)
 
     //********* BEGIN MONTE CARLO **********//
 
-    double num = (sm.g2_f - sm.g2_i)/sm.g2_step;
-    clog << "Starting simulation in g2 range: ";
-    clog << "[" << sm.g2_i << " : " << sm.g2_f << "), " << int(num) << " uniformly distributed values" << endl;
-    clog << "Local seed: " << global_seed+local_rank << endl;
-    clog << endl;
+    // Open file with precomputed dt values for each g2
+    string dt_filename = localpath + "dt.tmp";
+    ifstream in_dt;
+    in_dt.open(dt_filename);
     
     string prefix = "GEOM";
-    double g2 = sm.g2_i;
-    while(g2 < sm.g2_f)
+    double g2;
+    while(in_dt >> g2)
     {
+        // Create geometry
         Geom24 G(sm.p, sm.q, sm.dim, g2);
-       
         clog << G << endl;
-
-        string filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
 
 
         // THERMALIZATION
-
         clog << "Thermalization start timestamp: " << time(NULL) << endl;
         G.HMC(sm.L, sm.dt, sm.iter_therm, engine);
         clog << "Thermalization end timestamp: " << time(NULL) << endl;
         clog << "Integration step: " << sm.dt << endl;
-        
+
 
         // SIMULATION
-
         ofstream out_s, out_hl;
-        out_s.open(filename + "_S.txt");
-        out_hl.open(filename + "_HL.txt");
+        string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
+        out_s.open(out_filename + "_S.txt");
+        out_hl.open(out_filename + "_HL.txt");
+        
+        in_dt >> sm.dt;
 
         clog << "Simulation start timestamp: " << time(NULL) << endl;
         double ar = G.HMC(sm.L, sm.dt, sm.iter_simul, sm.gap, engine, out_s, out_hl);
@@ -152,12 +136,13 @@ int main(int argc, char** argv)
         out_s.close();
         out_hl.close();
 
-
         clog << "Acceptance rate: " << ar << endl;
         clog << endl;
 
         g2 += sm.g2_step;
     }
+
+    in_dt.close();
     
     
     //********* END MONTE CARLO **********//

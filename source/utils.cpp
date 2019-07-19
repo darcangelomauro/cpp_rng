@@ -89,19 +89,18 @@ string foldername_from_time(const time_t& t)
 
 
 
-void thermalization_analysis(const string& path)
+void dofs_analysis(const string& path)
 {
     // extract geometric data
     int p, q, dim;
     double g2;
-    string prefix = "GEOM";
-    data_from_filename(path, p, q, dim, g2, prefix);
+    data_from_filename(path, p, q, dim, g2, "PRELIM");
         
     
     // read quadratic and quartic part from file
     // and store separately in vectors
     ifstream in_s;
-    in_s.open(path + "_S_therm.txt");
+    in_s.open(path + "_S.txt");
     
     vector<double> vec2;
     vector<double> vec4;
