@@ -703,6 +703,8 @@ double Geom24::HMC_core(const int& Nt, const double& dt, gsl_rng* engine, double
     else
         e = 1;
 
+    delete [] mat_bk;
+
     return e;
 }
 

@@ -136,6 +136,7 @@ int main(int argc, char** argv)
     //********* END PRELIMINARY MONTE CARLO RUN **********//
 
     out_dt.close();
+    gsl_rng_free(engine);
 
     return 0;
 }
