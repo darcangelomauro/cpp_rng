@@ -88,6 +88,20 @@ string foldername_from_time(const time_t& t)
 }
 
 
+int n_meas(const int& n_tot, const int& gap)
+{
+    int res = 0;
+
+    for(int i=0; i<n_tot; ++i)
+    {
+        if( !(i%gap) )
+            ++res;
+    }
+
+    return res;
+}
+
+
 
 void dofs_analysis(const string& path)
 {
