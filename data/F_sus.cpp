@@ -143,6 +143,13 @@ int main(int argc, char** argv)
 
                 // ***** COMPUTE OBSERVABLE HERE *****
                 double temp = 0;
+                double norm = 0;
+                for(int k=0; k<G.get_nH(); ++k)
+                {
+                    temp += pow(trace(G.get_mat(k)).real(), 2);
+                    norm += trace(G.get_mat(k)*G.get_mat(k)).real();
+                }
+                temp /= G.get_dim()*norm;
                 // ***** THAT'S IT, YOU'RE DONE *****
 
                 vec_corr(j) = temp;
@@ -158,7 +165,7 @@ int main(int argc, char** argv)
         // Output mean and error of observable
         double avg = 0;
         double var = 0;
-        jackknife(samples, avg, var, my_mean);
+        jackknife(samples, avg, var, my_sus);
         double err = sqrt(var);
         out_obs << g2 << " " << avg << " " << err << endl;
 

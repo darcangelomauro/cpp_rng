@@ -36,11 +36,19 @@ struct Simul_params
 };
 
 // Function to read simulation parameters from stream
-bool read_init_stream(istream& in, struct Simul_params& sm);
+bool read_init_stream(istream&, struct Simul_params&);
 
 // Function to check whether parameters have been entered in the
 // correct order
-bool params_validity(struct Simul_params& sm);
+bool params_validity(struct Simul_params&);
+
+// Jack knife mean and variance estimate of an arbitrary function f
+void jackknife(const vec&, double&, double&, double f(const vec&));
+
+// Some stat functions
+double my_mean(const vec&);
+double my_var(const vec&);
+double my_sus(const vec&);
 
 int main(int argc, char** argv)
 {
@@ -142,7 +150,6 @@ int main(int argc, char** argv)
                     norm += trace(G.get_mat(k)*G.get_mat(k)).real();
                 }
                 temp /= G.get_dim()*norm;
-
                 // ***** THAT'S IT, YOU'RE DONE *****
 
                 vec_corr(j) = temp;
@@ -156,8 +163,10 @@ int main(int argc, char** argv)
 
 
         // Output mean and error of observable
-        double avg = mean(samples);
-        double err = stddev(samples) / num_jarr;
+        double avg = 0;
+        double var = 0;
+        jackknife(samples, avg, var, my_mean);
+        double err = sqrt(var);
         out_obs << g2 << " " << avg << " " << err << endl;
 
         g2 += sm.g2_step;
@@ -209,4 +218,58 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
 bool params_validity(struct Simul_params& sm)
 {
     return sm.valid == "p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:";
+}
+
+
+void jackknife(const vec& vec_uncorr, double& avg, double& var, double f(const vec&))
+{
+    // Find vector size
+    int size = vec_uncorr.n_elem;
+
+    // Create vector of delete-1 clusters
+    vec vec_del1(size);
+    
+    // Calculate delete-1 clusters
+    for(int i=0; i<size; ++i)
+    {
+        // Create i-th cluster
+        vec ith_cluster(size-1);
+        for(int j=0; j<size; ++j)
+        {
+            // Copy element in the same position if j < i
+            if(j < i)
+                ith_cluster(j) = vec_uncorr(j);
+            // Copy element one position behind if j > i
+            else if(j > i)
+                ith_cluster(j-1) = vec_uncorr(j);
+
+        }
+
+        // Put the return value of f into vec_del1 in i-th position
+        vec_del1(i) = f(ith_cluster);
+    }
+
+    // Calclulate unbiased mean
+    avg = mean(vec_del1);
+
+    // Calculate unbiased variance
+    var = 0;
+    for(int i=0; i<size; ++i)
+        var += pow(vec_del1(i) - avg, 2);
+    var *= (double)(size-1)/size;
+}
+
+double my_mean(const vec& vec_uncorr)
+{
+    return mean(vec_uncorr);
+}
+
+double my_var(const vec& vec_uncorr)
+{
+    return var(vec_uncorr, 1);
+}
+
+double my_sus(const vec& vec_uncorr)
+{
+    return var(vec_uncorr, 1)/mean(vec_uncorr);
 }
