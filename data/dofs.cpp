@@ -125,9 +125,8 @@ int main(int argc, char** argv)
             // Open data files
             string array_path = path + "/" + to_string(i+fst_jarr);
             string filename = filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
-            ifstream in_s, in_hl;
+            ifstream in_s;
             in_s.open(array_path + "/" + filename + "_S.txt");
-            in_hl.open(array_path + "/" + filename + "_HL.txt");
 
             // Create vector of correlated samples
             int length = n_meas(sm.iter_simul, sm.gap);
@@ -136,38 +135,31 @@ int main(int argc, char** argv)
             // Cycle on samples
             for(int j=0; j<length; ++j) 
             {
-                Geom24 G(sm.p, sm.q, sm.dim, g2);
                 double S2, S4;
                 in_s >> S2 >> S4;
-                G.read_mat(in_hl);
 
                 // ***** COMPUTE OBSERVABLE HERE *****
-                double temp = 0;
-                double norm = 0;
-                for(int k=0; k<G.get_nH(); ++k)
-                {
-                    temp += pow(trace(G.get_mat(k)).real(), 2);
-                    norm += trace(G.get_mat(k)*G.get_mat(k)).real();
-                }
-                temp /= G.get_dim()*norm;
+                double temp = 2*g2*S2 + 4*S4;
                 // ***** THAT'S IT, YOU'RE DONE *****
 
                 vec_corr(j) = temp;
             }
             in_s.close();
-            in_hl.close();
 
             // Initialize i-th element of vector of uncorrelated samples with mean of job #i
             samples(i) = mean(vec_corr);
         }
 
+        // Find theoretical value
+        Geom24 G(sm.p, sm.q, 1, 1);
+        double c = G.get_nHL()*sm.dim*sm.dim;
 
         // Output mean and error of observable
         double avg = 0;
         double var = 0;
-        jackknife(samples, avg, var, my_sus);
+        jackknife(samples, avg, var, my_mean);
         double err = sqrt(var);
-        out_obs << g2 << " " << avg << " " << err << endl;
+        out_obs << g2 << " " << avg << " " << err << " " << c << endl;
 
         g2 += sm.g2_step;
     }

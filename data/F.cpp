@@ -113,9 +113,8 @@ int main(int argc, char** argv)
     double g2 = sm.g2_i;
     while(g2 < sm.g2_f)
     {
-        // Create geometry
-        Geom24 G(sm.p, sm.q, sm.dim, g2);
-        clog << G << endl;
+        // Print value of g2 being precessed
+        clog << "g2: " << g2 << endl;
 
         // Create vector of uncorrelated samples
         vec samples(num_jarr);
@@ -137,6 +136,7 @@ int main(int argc, char** argv)
             // Cycle on samples
             for(int j=0; j<length; ++j) 
             {
+                Geom24 G(sm.p, sm.q, sm.dim, g2);
                 double S2, S4;
                 in_s >> S2 >> S4;
                 G.read_mat(in_hl);
