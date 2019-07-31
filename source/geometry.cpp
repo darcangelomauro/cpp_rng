@@ -709,7 +709,7 @@ double Geom24::HMC_core(const int& Nt, const double& dt, gsl_rng* engine, double
 }
 
 // HMC routine that performs dual averaging and outputs S2, S4, H, L
-double Geom24::HMC(const int& Nt, double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -776,7 +776,7 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, const int& gap, g
 }
 
 // HMC routine that performs dual averaging and outputs S2, S4
-double Geom24::HMC(const int& Nt, double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -832,7 +832,7 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, const int& gap, g
 }
 
 // HMC routine that performs dual averaging and doesn't output
-double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -1098,7 +1098,7 @@ double Geom24::MMC_core(const double& scale, gsl_rng* engine, double* s_i, doubl
 
 
 // MMC routine that performs dual averaging and outputs S2, S4, H, L
-double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
+double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -1170,7 +1170,7 @@ double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engi
 }
 
 // MMC routine that performs dual averaging and outputs S2, S4
-double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
+double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -1231,7 +1231,7 @@ double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engi
 }
 
 // MMC routine that performs dual averaging and doesn't output
-double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
+double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];

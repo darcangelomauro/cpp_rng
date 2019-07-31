@@ -70,12 +70,12 @@ class Geom24
         double calculate_H() const;
         void leapfrog(const int&, const double&);
         double HMC_core(const int&, const double&, gsl_rng*, double*, double*);
-        double Geom24::HMC(const int&, double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double Geom24::HMC(const int&, double&, const int&, const int&, gsl_rng*, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double Geom24::HMC(const int&, double&, const int&, gsl_rng*, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double Geom24::HMC(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
-        double Geom24::HMC(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&);
-        double Geom24::HMC(const int&, const double&, const int&, gsl_rng*);
+        double HMC(const int&, double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC(const int&, double&, const int&, const int&, gsl_rng*, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC(const int&, double&, const int&, gsl_rng*, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&);
+        double HMC(const int&, const double&, const int&, gsl_rng*);
         // ============== HAMILTONIAN METHODS
         
         // ============== METROPOLIS METHODS
@@ -83,12 +83,12 @@ class Geom24
         double delta4(const int&, const int&, const int&, const arma::cx_double&);
         double delta24(const int&, const int&, const int&, const arma::cx_double&);
         double MMC_core(const double&, gsl_rng*, double*, double*);
-        double Geom24::MMC(double&, const int&, const int&, gsl_rng* engine, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double Geom24::MMC(double&, const int&, const int&, gsl_rng* engine, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double Geom24::MMC(double&, const int&, gsl_rng* engine, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double Geom24::MMC(const double&, const int&, const int&, gsl_rng* engine, std::ostream&, std::ostream&);
-        double Geom24::MMC(const double&, const int&, const int&, gsl_rng* engine, std::ostream&);
-        double Geom24::MMC(const double&, const int&, gsl_rng* engine);
+        double MMC(double&, const int&, const int&, gsl_rng* engine, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double MMC(double&, const int&, const int&, gsl_rng* engine, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double MMC(double&, const int&, gsl_rng* engine, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double MMC(const double&, const int&, const int&, gsl_rng* engine, std::ostream&, std::ostream&);
+        double MMC(const double&, const int&, const int&, gsl_rng* engine, std::ostream&);
+        double MMC(const double&, const int&, gsl_rng* engine);
         void delta24_debug(const double&, const int&, gsl_rng*, std::ostream&);
         // ============== METROPOLIS METHODS
         
