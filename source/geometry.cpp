@@ -708,12 +708,8 @@ double Geom24::HMC_core(const int& Nt, const double& dt, gsl_rng* engine, double
     return e;
 }
 
-
-// HMC routine for preliminary run.
-// - Performs dual averaging on dt
-// - Outputs S2 and S4 to allow dofs analysis
-// - Measurements are taken 1 iteration apart
-double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, ostream& out_s)
+// HMC routine that performs dual averaging and outputs S2, S4, H, L
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -722,9 +718,6 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, 
     // dual averaging variables for dt
     double Stat = 0;
     double mu = log(10*dt);
-    double shr = 0.05;
-    int i0 = 10;
-    double kappa = 0.75;
     double log_dt_avg = log(dt);
     
     // iter repetitions of leapfrog
@@ -745,10 +738,25 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, 
 
         
         // core part of HMC
-        Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
+        Stat += asymp - HMC_core(Nt, dt, engine, en_i, en_f);
         
-        // print S2 and S4
-        out_s << en_f[0] << " " << en_f[1] << endl;
+        // print once every "gap" iterations
+        if( !(i%gap) )
+        {
+            // print S2 and S4
+            out_s << en_f[0] << " " << en_f[1] << endl;
+            
+            // print mat
+            for(int j=0; j<nHL; ++j)
+            {
+                for(int k=0; k<dim; ++k)
+                {
+                    for(int l=0; l<dim; ++l)
+                        out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+                }
+                out_hl << endl;
+            }
+        }
 
         // perform dual averaging on dt
         double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
@@ -764,24 +772,20 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, 
     delete [] en_i;
     delete [] en_f;
 
-    return (0.65 - Stat/iter);
+    return (asymp - Stat/iter);
 }
 
-
-// HMC routine for thermalization run
-// - Performs simple averaging on dt (just to help the thermalization process)
-// - Doesn't output anything because nobody cares
-double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine)
+// HMC routine that performs dual averaging and outputs S2, S4
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
     double* en_f = new double [4];
 
-    // simple averaging variables
+    // dual averaging variables for dt
     double Stat = 0;
     double mu = log(10*dt);
-    double shr = 0.05;
-    int i0 = 10;
+    double log_dt_avg = log(dt);
     
     // iter repetitions of leapfrog
     for(int i=0; i<iter; ++i)
@@ -801,37 +805,47 @@ double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine)
 
         
         // core part of HMC
-        Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
+        Stat += asymp - HMC_core(Nt, dt, engine, en_i, en_f);
         
-        // perform simple averaging
+        // print once every "gap" iterations
+        if( !(i%gap) )
+        {
+            // print S2 and S4
+            out_s << en_f[0] << " " << en_f[1] << endl;
+        }
+
+        // perform dual averaging on dt
         double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
         dt = exp(log_dt);
+        double eta = pow(i+1, -kappa);
+        log_dt_avg = eta*log_dt + (1-eta)*log_dt_avg;
     }
+
+    // set dt on its final dual averaged value
+    dt = exp(log_dt_avg);
+
 
     delete [] en_i;
     delete [] en_f;
 
-    return (0.65 - Stat/iter);
+    return (asymp - Stat/iter);
 }
 
-
-// HMC routine for simulation run
-// - Doesn't perform any kind of averaging on dt
-// - Outputs S2, S4, H, L
-// - Measurements are taken "gap" iterations apart
-double Geom24::HMC(const int& Nt, const double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+// HMC routine that performs dual averaging and doesn't output
+double Geom24::HMC(const int& Nt, double& dt, const int& iter, gsl_rng* engine, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
 {
-    // return value
-    double Stat = 0;
-
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
     double* en_f = new double [4];
 
+    // dual averaging variables for dt
+    double Stat = 0;
+    double mu = log(10*dt);
+    double log_dt_avg = log(dt);
+    
     // iter repetitions of leapfrog
     for(int i=0; i<iter; ++i)
     {
-        
         // if it's not the first interation set potential to
         // previous final value, otherwise compute it
         if(i)
@@ -847,9 +861,56 @@ double Geom24::HMC(const int& Nt, const double& dt, const int& iter, const int& 
 
         
         // core part of HMC
-        Stat += 0.65 - HMC_core(Nt, dt, engine, en_i, en_f);
+        Stat += asymp - HMC_core(Nt, dt, engine, en_i, en_f);
         
-        // print every "gap" iteration
+        // perform dual averaging on dt
+        double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+        dt = exp(log_dt);
+        double eta = pow(i+1, -kappa);
+        log_dt_avg = eta*log_dt + (1-eta)*log_dt_avg;
+    }
+
+    // set dt on its final dual averaged value
+    dt = exp(log_dt_avg);
+
+
+    delete [] en_i;
+    delete [] en_f;
+
+    return (asymp - Stat/iter);
+}
+
+// HMC routine that doesn't performs dual averaging and outputs S2, S4, H, L
+double Geom24::HMC(const int& Nt, const double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+{
+    // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
+    double* en_i = new double [4];
+    double* en_f = new double [4];
+
+    // return statistic
+    double Stat = 0;
+    
+    // iter repetitions of leapfrog
+    for(int i=0; i<iter; ++i)
+    {
+        // if it's not the first interation set potential to
+        // previous final value, otherwise compute it
+        if(i)
+        {
+            en_i[0] = en_f[0];
+            en_i[1] = en_f[1];
+        }
+        else
+        {
+            en_i[0] = dirac2();
+            en_i[1] = dirac4();
+        }
+
+        
+        // core part of HMC
+        Stat += HMC_core(Nt, dt, engine, en_i, en_f);
+        
+        // print once every "gap" iterations
         if( !(i%gap) )
         {
             // print S2 and S4
@@ -871,10 +932,89 @@ double Geom24::HMC(const int& Nt, const double& dt, const int& iter, const int& 
     delete [] en_i;
     delete [] en_f;
 
-    return (0.65 - Stat/iter);
+    return (Stat/iter);
 }
 
+// HMC routine that doesn't performs dual averaging and outputs S2, S4
+double Geom24::HMC(const int& Nt, const double& dt, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s)
+{
+    // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
+    double* en_i = new double [4];
+    double* en_f = new double [4];
 
+    // return statistic
+    double Stat = 0;
+    
+    // iter repetitions of leapfrog
+    for(int i=0; i<iter; ++i)
+    {
+        // if it's not the first interation set potential to
+        // previous final value, otherwise compute it
+        if(i)
+        {
+            en_i[0] = en_f[0];
+            en_i[1] = en_f[1];
+        }
+        else
+        {
+            en_i[0] = dirac2();
+            en_i[1] = dirac4();
+        }
+
+        
+        // core part of HMC
+        Stat += HMC_core(Nt, dt, engine, en_i, en_f);
+        
+        // print once every "gap" iterations
+        if( !(i%gap) )
+        {
+            // print S2 and S4
+            out_s << en_f[0] << " " << en_f[1] << endl;
+        }
+    }
+
+    delete [] en_i;
+    delete [] en_f;
+
+    return (Stat/iter);
+}
+
+// HMC routine that doesn't performs dual averaging and doesn't output
+double Geom24::HMC(const int& Nt, const double& dt, const int& iter, gsl_rng* engine)
+{
+    // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
+    double* en_i = new double [4];
+    double* en_f = new double [4];
+
+    // return statistic
+    double Stat = 0;
+    
+    // iter repetitions of leapfrog
+    for(int i=0; i<iter; ++i)
+    {
+        // if it's not the first interation set potential to
+        // previous final value, otherwise compute it
+        if(i)
+        {
+            en_i[0] = en_f[0];
+            en_i[1] = en_f[1];
+        }
+        else
+        {
+            en_i[0] = dirac2();
+            en_i[1] = dirac4();
+        }
+
+        
+        // core part of HMC
+        Stat += HMC_core(Nt, dt, engine, en_i, en_f);
+    }
+
+    delete [] en_i;
+    delete [] en_f;
+
+    return (Stat/iter);
+}
 
 
 
@@ -957,11 +1097,8 @@ double Geom24::MMC_core(const double& scale, gsl_rng* engine, double* s_i, doubl
         
 
 
-// MMC routine for preliminary run.
-// - Performs dual averaging on scale
-// - Outputs S2 and S4 to allow dofs analysis
-// - Measurements are taken 1 iteration apart
-double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, ostream& out_s)
+// MMC routine that performs dual averaging and outputs S2, S4, H, L
+double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -973,9 +1110,6 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, ostream& out
     // dual averaging variables
     double Stat = 0;
     double mu = log(10*scale);
-    double shr = 0.05;
-    int i0 = 10;
-    double kappa = 0.75;
     double log_scale_avg = log(scale);
 
     // iter sweeps of metropolis
@@ -997,7 +1131,7 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, ostream& out
             }
 
             
-            Stat += 0.232 - MMC_core(scale, engine, s_i, s_f);
+            Stat += asymp - MMC_core(scale, engine, s_i, s_f);
         
             // perform dual averaging
             double log_scale = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
@@ -1007,8 +1141,23 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, ostream& out
         }
 
         
-        // print action2 and action4
-        out_s << s_f[0] << " " << s_f[1] << endl; 
+        // print every "gap" iteration
+        if( !(i%gap) )
+        {
+            // action2 and action4
+            out_s << s_f[0] << " " << s_f[1] << endl; 
+
+            // mat
+            for(int j=0; j<nHL; ++j)
+            {
+                for(int k=0; k<dim; ++k)
+                {
+                    for(int l=0; l<dim; ++l)
+                        out_hl << mat[j](k,l).real() << " " << mat[j](k,l).imag() << " ";
+                }
+                out_hl << endl;
+            }
+        }
     }
     
     // set scale on its final dual averaged value
@@ -1017,14 +1166,11 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, ostream& out
     delete [] s_i;
     delete [] s_f;
 
-    return (0.232 - Stat/(iter*Nsw));
+    return (asymp - Stat/(iter*Nsw));
 }
 
-
-// MMC routine for thermalization run
-// - Performs simple averaging on scale (just to help the thermalization process)
-// - Doesn't output anything because nobody cares
-double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine)
+// MMC routine that performs dual averaging and outputs S2, S4
+double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -1033,11 +1179,10 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine)
     // calculate length of a sweep in terms of dofs
     int Nsw = nHL*dim*dim;
 
-    // simple averaging variables
+    // dual averaging variables
     double Stat = 0;
     double mu = log(10*scale);
-    double shr = 0.05;
-    int i0 = 10;
+    double log_scale_avg = log(scale);
 
     // iter sweeps of metropolis
     for(int i=0; i<iter; ++i)
@@ -1058,36 +1203,47 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine)
             }
 
             
-            Stat += 0.232 - MMC_core(scale, engine, s_i, s_f);
+            Stat += asymp - MMC_core(scale, engine, s_i, s_f);
         
-            // perform simple averaging
+            // perform dual averaging
             double log_scale = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
             scale = exp(log_scale);
+            double eta = pow(i+1, -kappa);
+            log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
+        }
+
+        
+        // print every "gap" iteration
+        if( !(i%gap) )
+        {
+            // action2 and action4
+            out_s << s_f[0] << " " << s_f[1] << endl; 
         }
     }
+    
+    // set scale on its final dual averaged value
+    scale = exp(log_scale_avg);
     
     delete [] s_i;
     delete [] s_f;
 
-    return (0.232 - Stat/(iter*Nsw));
+    return (asymp - Stat/(iter*Nsw));
 }
 
-
-// MMC routine for simulation run
-// - Doesn't perform any kind of averaging on scale
-// - Outputs S2, S4, H, L
-// - Measurements are taken "gap" iterations apart
-double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+// MMC routine that performs dual averaging and doesn't output
+double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, const double& asymp, const double& shr=0.05, const double& kappa=0.75, const int& i0=10)
 {
-    // return value
-    double Stat = 0;
-    
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
     double* s_f = new double [2];
 
     // calculate length of a sweep in terms of dofs
     int Nsw = nHL*dim*dim;
+
+    // dual averaging variables
+    double Stat = 0;
+    double mu = log(10*scale);
+    double log_scale_avg = log(scale);
 
     // iter sweeps of metropolis
     for(int i=0; i<iter; ++i)
@@ -1108,7 +1264,58 @@ double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng
             }
 
             
-            Stat += 0.232 - MMC_core(scale, engine, s_i, s_f);
+            Stat += asymp - MMC_core(scale, engine, s_i, s_f);
+        
+            // perform dual averaging
+            double log_scale = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
+            scale = exp(log_scale);
+            double eta = pow(i+1, -kappa);
+            log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
+        }
+    }
+    
+    // set scale on its final dual averaged value
+    scale = exp(log_scale_avg);
+    
+    delete [] s_i;
+    delete [] s_f;
+
+    return (asymp - Stat/(iter*Nsw));
+}
+
+// MMC routine that doesn't perform dual averaging and outputs S2, S4, H, L
+double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+{
+    // initial (_i) and final (_f) action2 and action4 
+    double* s_i = new double [2];
+    double* s_f = new double [2];
+
+    // calculate length of a sweep in terms of dofs
+    int Nsw = nHL*dim*dim;
+
+    // return statistic
+    double Stat = 0;
+
+    // iter sweeps of metropolis
+    for(int i=0; i<iter; ++i)
+    {
+        for(int j=0; j<Nsw; ++j)
+        {
+            // set action to previous final value,
+            // unless it's the first iteration
+            if(j)
+            {
+                s_i[0] = s_f[0];
+                s_i[1] = s_f[1];
+            }
+            else
+            {
+                s_i[0] = dirac2();
+                s_i[1] = dirac4();
+            }
+
+            
+            Stat += MMC_core(scale, engine, s_i, s_f);
         }
 
         
@@ -1134,8 +1341,102 @@ double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng
     delete [] s_i;
     delete [] s_f;
 
-    return (0.232 - Stat/(iter*Nsw));
+    return (Stat/(iter*Nsw));
 }
+
+// MMC routine that doesn't perform dual averaging and outputs S2, S4
+double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s)
+{
+    // initial (_i) and final (_f) action2 and action4 
+    double* s_i = new double [2];
+    double* s_f = new double [2];
+
+    // calculate length of a sweep in terms of dofs
+    int Nsw = nHL*dim*dim;
+
+    // return statistic
+    double Stat = 0;
+
+    // iter sweeps of metropolis
+    for(int i=0; i<iter; ++i)
+    {
+        for(int j=0; j<Nsw; ++j)
+        {
+            // set action to previous final value,
+            // unless it's the first iteration
+            if(j)
+            {
+                s_i[0] = s_f[0];
+                s_i[1] = s_f[1];
+            }
+            else
+            {
+                s_i[0] = dirac2();
+                s_i[1] = dirac4();
+            }
+
+            
+            Stat += MMC_core(scale, engine, s_i, s_f);
+        }
+
+        
+        // print every "gap" iteration
+        if( !(i%gap) )
+        {
+            // action2 and action4
+            out_s << s_f[0] << " " << s_f[1] << endl; 
+        }
+    }
+    
+    delete [] s_i;
+    delete [] s_f;
+
+    return (Stat/(iter*Nsw));
+}
+
+// MMC routine that doesn't perform dual averaging and doesn't output
+double Geom24::MMC(const double& scale, const int& iter, gsl_rng* engine)
+{
+    // initial (_i) and final (_f) action2 and action4 
+    double* s_i = new double [2];
+    double* s_f = new double [2];
+
+    // calculate length of a sweep in terms of dofs
+    int Nsw = nHL*dim*dim;
+
+    // return statistic
+    double Stat = 0;
+
+    // iter sweeps of metropolis
+    for(int i=0; i<iter; ++i)
+    {
+        for(int j=0; j<Nsw; ++j)
+        {
+            // set action to previous final value,
+            // unless it's the first iteration
+            if(j)
+            {
+                s_i[0] = s_f[0];
+                s_i[1] = s_f[1];
+            }
+            else
+            {
+                s_i[0] = dirac2();
+                s_i[1] = dirac4();
+            }
+
+            
+            Stat += MMC_core(scale, engine, s_i, s_f);
+        }
+    }
+    
+    delete [] s_i;
+    delete [] s_f;
+
+    return (Stat/(iter*Nsw));
+}
+
+
 
 cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int& i4, const double& cliff, const bool& neg) const
 {
