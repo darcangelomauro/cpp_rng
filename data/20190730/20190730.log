@@ -1,0 +1,12 @@
+git commit hash: ed9d8063e68436eb1e5ff59a807d73ea17ef11e7
+rng seed: 1564496860
+p: 2
+q: 0
+dim: 20
+scale: 0.005
+iter_therm: 10001
+iter_simul: 10001
+gap: 1000
+g2_i: -4.0
+g2_f: -1.45
+g2_step: 0.1
