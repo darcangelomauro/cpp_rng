@@ -19,9 +19,9 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = base
+MAIN = base base_RP
 
-SOURCE = clifford geometry utils 
+SOURCE = clifford geometry utils HMC HMC_RP MMC 
 
 # search path for modules
 

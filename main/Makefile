@@ -19,9 +19,9 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = simul_range prelim_simul_range
+MAIN = simul_range prelim_simul_range simul_range_RP prelim_simul_range_RP
 
-SOURCE = clifford geometry utils 
+SOURCE = clifford geometry utils HMC HMC_RP MMC 
 
 # search path for modules
 

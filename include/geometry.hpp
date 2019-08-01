@@ -76,6 +76,10 @@ class Geom24
         double HMC(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
         double HMC(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&);
         double HMC(const int&, const double&, const int&, gsl_rng*);
+        double HMC_RP_core(const int&, const int&, const double&, const double&, gsl_rng*, double*, double*);
+        double HMC_RP(const int&, const int&, const double&, const double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC_RP(const int&, const int&, const double&, const double&, const int&, const int&, gsl_rng*, std::ostream&);
+        double HMC_RP(const int&, const int&, const double&, const double&, const int&, gsl_rng*);
         // ============== HAMILTONIAN METHODS
         
         // ============== METROPOLIS METHODS
