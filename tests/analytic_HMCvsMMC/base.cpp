@@ -18,30 +18,34 @@ int main()
     gsl_rng_set(engine, time(NULL));
 
     // create geometry from input
-    const int p = 0;
-    const int q = 3;
-    const int dim = 16;
-    const double g2 = -2.5;
-    const int iter = 10;
+    const int p = 2;
+    const int q = 0;
+    const int dim = 20;
+    const double g2 = -4.0;
+    const int iter = 10000;
 
     Geom24 G1(p, q, dim, g2);
     Geom24 G2(p, q, dim, g2);
     int c = dim*dim*G1.get_nHL();
    
 
-    // simulation
+    // dual averaging hmc
+    double dt = 0.005;
+    G1.HMC(100, dt, 1000, engine, 0.65);
+    
+    // dual averaging mmc
+    double scale = 0.128;
+    G2.MMC(scale, 1000, engine, 0.232);
 
     ofstream out_s_h, out_s_m;
     out_s_h.open("data/" + filename_from_data(p, q, dim, g2, "HMC") + "_S.txt");
     out_s_m.open("data/" + filename_from_data(p, q, dim, g2, "MMC") + "_S.txt");
 
-    double dt = 0.005;
-    double scale = 0.128;
 
     clock_t start1 = clock();
-    double ar_h = G1.HMC(100, dt, iter, engine, out_s_h);
+    double ar_h = G1.HMC(100, dt, iter, 1, engine, out_s_h);
     clock_t start2 = clock();
-    double ar_m = G2.MMC(scale, iter, engine, out_s_m);
+    double ar_m = G2.MMC(scale, iter, 1, engine, out_s_m);
     clock_t end = clock();
     
     out_s_h.close();
@@ -82,18 +86,18 @@ int main()
     ofstream out_s;
     out_s.open("data/" + filename_from_data(p, q, dim, g2, "") + "_dofs.txt");
 
-    // calculate average of 2gTrD2 + 4TrD4 based on the last iter/10 samples
-    for(int i=0; i<(iter-(iter/10)); ++i)
+    // calculate progression in the average of 2gTrD2 + 4TrD4
+    for(int i=0; i<iter; i=i+10)
     {
         double res_h = 0;
         double res_m = 0;
-        for(int j=0; j<iter/10; ++j)
+        for(int j=0; j<i; ++j)
         {
-            res_h += 2*g2*vec2_h[i+j] + 4*vec4_h[i+j];
-            res_m += 2*g2*vec2_m[i+j] + 4*vec4_m[i+j];
+            res_h += 2*g2*vec2_h[j] + 4*vec4_h[j];
+            res_m += 2*g2*vec2_m[j] + 4*vec4_m[j];
 
         }
-        out_s << 10*res_h/iter << " " << 10*res_m/iter << " " << c << endl;
+        out_s << res_h/i << " " << res_m/i << " " << c << endl;
     }
     out_s.close();
 
