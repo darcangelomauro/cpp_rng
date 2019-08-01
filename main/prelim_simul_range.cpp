@@ -115,7 +115,7 @@ int main(int argc, char** argv)
         out_s.open(out_filename + "_S.txt");
         
         clog << "Preliminary run start timestamp: " << time(NULL) << endl;
-        double ar = G.HMC(sm.L, sm.dt, sm.iter_therm, engine, out_s);
+        double ar = G.HMC(sm.L, sm.dt, sm.iter_therm, 1, engine, out_s, 0.65);
         clog << "Preliminary run end timestamp: " << time(NULL) << endl;
         clog << "Integration step: " << sm.dt << endl;
         clog << "Acceptance rate: " << ar << endl;
@@ -126,9 +126,6 @@ int main(int argc, char** argv)
         // Write final value of dt
         out_dt << g2 << " " << sm.dt << endl;
 
-        // Perform dofs analysis
-        dofs_analysis(out_filename);
-        
         // Increment g2
         g2 += sm.g2_step;
     }

@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 
         // THERMALIZATION
         clog << "Thermalization start timestamp: " << time(NULL) << endl;
-        G.HMC(sm.L, sm.dt, sm.iter_therm, engine);
+        G.HMC(sm.L, sm.dt, sm.iter_therm, engine, 0.65);
         clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
 

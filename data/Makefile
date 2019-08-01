@@ -19,7 +19,7 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = base_analysis F F_sus dofs
+MAIN = base_analysis F F_sus dofs very_odd_analysis dofs_prelim mmc_dofs
 
 SOURCE = clifford geometry utils 
 
