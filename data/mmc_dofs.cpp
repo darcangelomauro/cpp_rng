@@ -20,8 +20,7 @@ struct Simul_params
     int dim;
 
     // Integration parameters
-    int L;
-    double dt;
+    double scale;
 
     // Other parameters
     int iter_therm;
@@ -90,7 +89,7 @@ int main(int argc, char** argv)
     if(!params_validity(sm))
     {
         cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
-        cerr << "The correct formatting is p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:" << endl;
+        cerr << "The correct formatting is p:q:dim:scale:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:" << endl;
         cerr << "Validity string:          " << sm.valid << endl;
         return 0;
     }
@@ -190,9 +189,7 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
         sm.valid += temp;
         in >> temp >> sm.dim;
         sm.valid += temp;
-        in >> temp >> sm.L;
-        sm.valid += temp;
-        in >> temp >> sm.dt;
+        in >> temp >> sm.scale;
         sm.valid += temp;
         in >> temp >> sm.iter_therm;
         sm.valid += temp;
@@ -215,7 +212,7 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
 
 bool params_validity(struct Simul_params& sm)
 {
-    return sm.valid == "p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:";
+    return sm.valid == "p:q:dim:scale:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:";
 }
 
 

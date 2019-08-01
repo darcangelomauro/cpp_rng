@@ -104,10 +104,6 @@ int main(int argc, char** argv)
     //********* BEGIN ANALYSIS **********//
     
 
-    // Open output file 
-    string out_filename = path + "/observables/" + name + ".txt";
-    ofstream out_obs;
-    out_obs.open(out_filename);
 
     // Cycle on g2 values
     double g2 = sm.g2_i;
@@ -116,61 +112,48 @@ int main(int argc, char** argv)
         // Print value of g2 being precessed
         clog << "g2: " << g2 << endl;
 
-        // Create vector of uncorrelated samples
-        vec samples(num_jarr);
-
         // Cycle on jobs in the array
         for(int i=0; i<num_jarr; ++i)
         {
             // Open data files
             string array_path = path + "/" + to_string(i+fst_jarr);
             string filename = filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
-            ifstream in_s;
+            ifstream in_s, in_hl;
             in_s.open(array_path + "/" + filename + "_S.txt");
+            in_hl.open(array_path + "/" + filename + "_HL.txt");
 
             // Create vector of correlated samples
             int length = n_meas(sm.iter_simul, sm.gap);
-            vec vec_corr(length);
 
+            // Open output file 
+            string coord_filename = path + "/observables/" + to_string(i) + "_" + to_string(g2) + "_coord.txt";
+            ofstream out_coord;
+            out_coord.open(coord_filename);
+            
             // Cycle on samples
             for(int j=0; j<length; ++j) 
             {
+                Geom24 G(sm.p, sm.q, sm.dim, g2);
                 double S2, S4;
                 in_s >> S2 >> S4;
+                G.read_mat(in_hl);
 
                 // ***** COMPUTE OBSERVABLE HERE *****
-                double temp = 2*g2*S2 + 4*S4;
+                double temp1 = trace(G.get_mat(0)).real();
+                double temp2 = trace(G.get_mat(1)).real();
                 // ***** THAT'S IT, YOU'RE DONE *****
 
-                vec_corr(j) = temp;
+                out_coord << temp1 << " " << temp2 << endl;
             }
             in_s.close();
+            in_hl.close();
+            out_coord.close();
 
-            // Initialize i-th element of vector of uncorrelated samples with mean of job #i
-            samples(i) = mean(vec_corr);
         }
-
-        // Find theoretical value
-        Geom24 G(sm.p, sm.q, 1, 1);
-        double c = G.get_nHL()*sm.dim*sm.dim;
-
-        if(num_jarr > 1)
-        {
-            // Output mean and error of observable
-            double avg = 0;
-            double var = 0;
-            jackknife(samples, avg, var, my_mean);
-            double err = sqrt(var);
-            out_obs << g2 << " " << avg << " " << err << " " << c << endl;
-        }
-        else
-            out_obs << g2 << " " << samples(0) << " " << "---" << " " << c << endl;
 
 
         g2 += sm.g2_step;
     }
-
-    out_obs.close();
 
     //********* END ANALYSIS **********//
 
