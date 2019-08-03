@@ -278,7 +278,7 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
         sm.valid += temp;
         in >> temp >> sm.g2_step;
         sm.valid += temp;
-        in >> sm.mode;
+        in >> temp >> sm.mode;
         sm.valid += temp;
 
         success = true;
