@@ -615,28 +615,6 @@ double Geom24::calculate_H() const
     return calculate_S() + calculate_K();
 }
 
-void Geom24::leapfrog(const int& Nt, const double& dt)
-{
-    for(int i=0; i<nHL; ++i)
-        mat[i] += (dt/2.)*mom[i].st();
-
-    for(int j=0; j<Nt-1; ++j)
-    {
-        for(int i=0; i<nHL; ++i)
-        {
-            mom[i] += -dt*der_dirac24(i, true);
-            mat[i] += dt*mom[i].st();
-        }
-    }
-    
-    for(int i=0; i<nHL; ++i)
-    {
-        mom[i] += -dt*der_dirac24(i, true);
-        mat[i] += (dt/2.)*mom[i].st();
-    }
-}
-
-
 cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int& i4, const double& cliff, const bool& neg) const
 {
     if(neg)

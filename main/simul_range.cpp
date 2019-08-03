@@ -24,6 +24,7 @@ struct Simul_params
     // Integration parameters
     int L;
     double dt;
+    int M;
 
     // Other parameters
     int iter_therm;
@@ -32,6 +33,9 @@ struct Simul_params
     double g2_i;
     double g2_f;
     double g2_step;
+
+    // HMC mode
+    string mode;
 
     // Validity string
     string valid;
@@ -87,7 +91,7 @@ int main(int argc, char** argv)
     if(!params_validity(sm))
     {
         cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
-        cerr << "The correct formatting is p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:" << endl;
+        cerr << "The correct formatting is p:q:dim:L:dt:M:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:mode:" << endl;
         cerr << "Validity string:          " << sm.valid << endl;
         return 0;
     }
@@ -115,32 +119,120 @@ int main(int argc, char** argv)
         clog << G << endl;
 
 
-        // THERMALIZATION
-        clog << "Thermalization start timestamp: " << time(NULL) << endl;
-        G.HMC(sm.L, sm.dt, sm.iter_therm, engine, 0.65);
-        clog << "Thermalization end timestamp: " << time(NULL) << endl;
+        if(sm.mode == "fix_nosplit")
+        {
+            // THERMALIZATION
+            clog << "Thermalization start timestamp: " << time(NULL) << endl;
+            G.HMC_fix_nosplit(sm.L, sm.dt, sm.iter_therm, engine, 0.65);
+            clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
 
-        // SIMULATION
-        ofstream out_s, out_hl;
-        string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
-        out_s.open(out_filename + "_S.txt");
-        out_hl.open(out_filename + "_HL.txt");
+            // SIMULATION
+            ofstream out_s, out_hl;
+            string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
+            out_s.open(out_filename + "_S.txt");
+            out_hl.open(out_filename + "_HL.txt");
+            
+            in_dt >> sm.dt;
+
+            clog << "Simulation start timestamp: " << time(NULL) << endl;
+            double ar = G.HMC_fix_nosplit(sm.L, sm.dt, sm.iter_simul, sm.gap, engine, out_s, out_hl);
+            clog << "Simulation end timestamp: " << time(NULL) << endl;
+
+            out_s.close();
+            out_hl.close();
+
+            clog << "Integration step: " << sm.dt << endl;
+            clog << "Acceptance rate: " << ar << endl;
+            clog << endl;
+        }
         
-        in_dt >> sm.dt;
+        else if(sm.mode == "fix_split")
+        {
+            // THERMALIZATION
+            clog << "Thermalization start timestamp: " << time(NULL) << endl;
+            G.HMC_fix_split(sm.L, sm.dt, sm.M, sm.iter_therm, engine, 0.65);
+            clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
-        clog << "Simulation start timestamp: " << time(NULL) << endl;
-        double ar = G.HMC(sm.L, sm.dt, sm.iter_simul, sm.gap, engine, out_s, out_hl);
-        clog << "Simulation end timestamp: " << time(NULL) << endl;
 
-        out_s.close();
-        out_hl.close();
+            // SIMULATION
+            ofstream out_s, out_hl;
+            string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
+            out_s.open(out_filename + "_S.txt");
+            out_hl.open(out_filename + "_HL.txt");
+            
+            in_dt >> sm.dt;
 
-        clog << "Integration step: " << sm.dt << endl;
-        clog << "Acceptance rate: " << ar << endl;
-        clog << endl;
+            clog << "Simulation start timestamp: " << time(NULL) << endl;
+            double ar = G.HMC_fix_split(sm.L, sm.dt, sm.M, sm.iter_simul, sm.gap, engine, out_s, out_hl);
+            clog << "Simulation end timestamp: " << time(NULL) << endl;
 
-        g2 += sm.g2_step;
+            out_s.close();
+            out_hl.close();
+
+            clog << "Integration step: " << sm.dt << endl;
+            clog << "Acceptance rate: " << ar << endl;
+            clog << endl;
+        }
+        
+        else if(sm.mode == "rand_nosplit")
+        {
+            // THERMALIZATION
+            clog << "Thermalization start timestamp: " << time(NULL) << endl;
+            G.HMC_fix_nosplit(sm.L, sm.dt, 100, engine, 0.65);
+            double dt_min, dt_max;
+            in_dt >> dt_min >> dt_max;
+            G.HMC_rand_nosplit(sm.L, sm.L, dt_min, dt_max, sm.iter_therm, engine);
+            clog << "Thermalization end timestamp: " << time(NULL) << endl;
+
+
+            // SIMULATION
+            ofstream out_s, out_hl;
+            string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
+            out_s.open(out_filename + "_S.txt");
+            out_hl.open(out_filename + "_HL.txt");
+            
+            clog << "Simulation start timestamp: " << time(NULL) << endl;
+            double ar = G.HMC_rand_nosplit(sm.L, sm.L, dt_min, dt_max, sm.iter_simul, sm.gap, engine, out_s, out_hl);
+            clog << "Simulation end timestamp: " << time(NULL) << endl;
+
+            out_s.close();
+            out_hl.close();
+
+            clog << "Integration step: " << sm.dt << endl;
+            clog << "Acceptance rate: " << ar << endl;
+            clog << endl;
+        }
+        
+        else if(sm.mode == "rand_split")
+        {
+            // THERMALIZATION
+            clog << "Thermalization start timestamp: " << time(NULL) << endl;
+            G.HMC_fix_split(sm.L, sm.dt, sm.M, 100, engine, 0.65);
+            double dt_min, dt_max;
+            in_dt >> dt_min >> dt_max;
+            G.HMC_rand_split(sm.L, sm.L, dt_min, dt_max, sm.M, sm.iter_therm, engine);
+            clog << "Thermalization end timestamp: " << time(NULL) << endl;
+
+
+            // SIMULATION
+            ofstream out_s, out_hl;
+            string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
+            out_s.open(out_filename + "_S.txt");
+            out_hl.open(out_filename + "_HL.txt");
+            
+            clog << "Simulation start timestamp: " << time(NULL) << endl;
+            double ar = G.HMC_rand_split(sm.L, sm.L, dt_min, dt_max, sm.M, sm.iter_simul, sm.gap, engine, out_s, out_hl);
+            clog << "Simulation end timestamp: " << time(NULL) << endl;
+
+            out_s.close();
+            out_hl.close();
+
+            clog << "Integration step: " << sm.dt << endl;
+            clog << "Acceptance rate: " << ar << endl;
+            clog << endl;
+
+        }
     }
 
     in_dt.close();
@@ -172,6 +264,8 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
         sm.valid += temp;
         in >> temp >> sm.dt;
         sm.valid += temp;
+        in >> temp >> sm.M;
+        sm.valid += temp;
         in >> temp >> sm.iter_therm;
         sm.valid += temp;
         in >> temp >> sm.iter_simul;
@@ -184,6 +278,8 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
         sm.valid += temp;
         in >> temp >> sm.g2_step;
         sm.valid += temp;
+        in >> sm.mode;
+        sm.valid += temp;
 
         success = true;
     }
@@ -193,5 +289,5 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
 
 bool params_validity(struct Simul_params& sm)
 {
-    return sm.valid == "p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:";
+    return sm.valid == "p:q:dim:L:dt:M:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:mode:";
 }

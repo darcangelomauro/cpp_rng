@@ -21,7 +21,7 @@ all: rmxeq mkdep mkxeq
 
 MAIN = base produce_f autocorr
 
-SOURCE = clifford geometry utils 
+SOURCE = clifford geometry utils HMC MMC 
 
 # search path for modules
 

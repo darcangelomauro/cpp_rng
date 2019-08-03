@@ -19,18 +19,18 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = simul_range prelim_simul_range
+MAIN = base
 
-SOURCE = clifford geometry utils HMC_core HMC_fix_nosplit HMC_fix_split HMC_rand_nosplit HMC_rand_split leapfrog MMC 
+SOURCE = clifford geometry utils HMC_fix_nosplit HMC_fix_split HMC_rand_nosplit HMC_rand_split HMC_core leapfrog MMC 
 
 # search path for modules
 
-VPATH = ../source
+VPATH = ../../source
 
 
 # additional include directories
 
-INCPATH = ../include /home/pmxmd10/gsl/include
+INCPATH = ../../include /home/pmxmd10/gsl/include
 
 
 # additional libraries to be included 
@@ -42,7 +42,7 @@ LIBPATH = /home/pmxmd10/gsl/lib
 
 # scheduling and optimization options (such as -DSSE -DSSE2 -DP4)
  
-CFLAGS = -std=c++11 -pedantic -fstrict-aliasing -Wall -Wno-long-long -Werror -g 
+CFLAGS = -std=c++11 -pedantic -fstrict-aliasing -Wall -Wno-long-long -Werror 
 
 ############################## do not change ###################################
 
