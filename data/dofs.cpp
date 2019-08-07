@@ -22,6 +22,7 @@ struct Simul_params
     // Integration parameters
     int L;
     double dt;
+    int M;
 
     // Other parameters
     int iter_therm;
@@ -30,6 +31,9 @@ struct Simul_params
     double g2_i;
     double g2_f;
     double g2_step;
+
+    // HMC mode
+    string mode;
 
     // Validity string
     string valid;
@@ -90,7 +94,7 @@ int main(int argc, char** argv)
     if(!params_validity(sm))
     {
         cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
-        cerr << "The correct formatting is p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:" << endl;
+        cerr << "The correct formatting is p:q:dim:L:dt:M:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:mode:" << endl;
         cerr << "Validity string:          " << sm.valid << endl;
         return 0;
     }
@@ -194,6 +198,8 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
         sm.valid += temp;
         in >> temp >> sm.dt;
         sm.valid += temp;
+        in >> temp >> sm.M;
+        sm.valid += temp;
         in >> temp >> sm.iter_therm;
         sm.valid += temp;
         in >> temp >> sm.iter_simul;
@@ -206,6 +212,8 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
         sm.valid += temp;
         in >> temp >> sm.g2_step;
         sm.valid += temp;
+        in >> temp >> sm.mode;
+        sm.valid += temp;
 
         success = true;
     }
@@ -215,7 +223,7 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
 
 bool params_validity(struct Simul_params& sm)
 {
-    return sm.valid == "p:q:dim:L:dt:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:";
+    return sm.valid == "p:q:dim:L:dt:M:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:mode:";
 }
 
 
