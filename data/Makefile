@@ -19,9 +19,9 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = base_analysis F F_sus dofs very_odd_analysis dofs_prelim mmc_dofs
+MAIN = base_analysis F F_sus dofs very_odd_analysis dofs_prelim
 
-SOURCE = clifford geometry utils 
+SOURCE = clifford geometry utils statistics params 
 
 # search path for modules
 

@@ -8,46 +8,10 @@
 #include <gsl/gsl_rng.h>
 #include "geometry.hpp"
 #include "utils.hpp"
+#include "params.hpp"
 
 using namespace std;
 using namespace arma;
-
-// Struct to pack the simulation
-// parameters all together.
-struct Simul_params
-{
-    // Geometric parameters
-    int p;
-    int q;
-    int dim;
-
-    // Integration parameters
-    int L;
-    double dt;
-    int M;
-
-    // Other parameters
-    int iter_therm;
-    int iter_simul;
-    int gap;
-    double g2_i;
-    double g2_f;
-    double g2_step;
-
-    // HMC mode
-    string mode;
-
-    // Validity string
-    string valid;
-};
-
-// Function to read simulation parameters from stream
-bool read_init_stream(istream& in, struct Simul_params& sm);
-
-// Function to check whether parameters have been entered in the
-// correct order
-bool params_validity(struct Simul_params& sm);
-
 
 int main(int argc, char** argv)
 {
@@ -87,7 +51,7 @@ int main(int argc, char** argv)
     if(!params_validity(sm))
     {
         cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
-        cerr << "The correct formatting is p:q:dim:L:dt:M:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:mode:" << endl;
+        cerr << "The correct formatting is " << sm.control << endl;
         cerr << "Validity string:          " << sm.valid << endl;
         return 0;
     }
@@ -123,49 +87,51 @@ int main(int argc, char** argv)
         if(sm.mode == "fix_nosplit")
         {
             // Thermalize
-            G.HMC_fix_nosplit(sm.L, sm.dt, sm.iter_therm, engine, 0.65);
+            double dt = 0.005;
+            G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, engine, sm.AR);
             
             // Start run
-            double ar = G.HMC_fix_nosplit(sm.L, sm.dt, sm.iter_therm, 1, engine, out_s);
+            double ar = G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, 1, engine, out_s);
             
             // Output log
             clog << "Preliminary run end timestamp: " << time(NULL) << endl;
-            clog << "Integration step: " << sm.dt << endl;
+            clog << "Integration step: " << dt << endl;
             clog << "Acceptance rate: " << ar << endl;
             clog << endl;
             
             // Write final value of dt
-            out_dt << g2 << " " << sm.dt << endl;
+            out_dt << g2 << " " << dt << endl;
         }
 
         else if(sm.mode == "fix_split")
         {
             // Thermalize
-            G.HMC_fix_split(sm.L, sm.dt, sm.M, sm.iter_therm, engine, 0.65);
+            double dt = 0.005;
+            G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, engine, sm.AR);
             
             // Start run
-            double ar = G.HMC_fix_split(sm.L, sm.dt, sm.M, sm.iter_therm, 1, engine, out_s);
+            double ar = G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, 1, engine, out_s);
             
             // Output log
             clog << "Preliminary run end timestamp: " << time(NULL) << endl;
-            clog << "Integration step: " << sm.dt << endl;
+            clog << "Integration step: " << dt << endl;
             clog << "Acceptance rate: " << ar << endl;
             clog << endl;
             
             // Write final value of dt
-            out_dt << g2 << " " << sm.dt << endl;
+            out_dt << g2 << " " << dt << endl;
         }
 
         else if(sm.mode == "rand_nosplit")
         {
             // Thermalize
-            double dt_min = sm.dt;
-            G.HMC_fix_nosplit(sm.L, dt_min, sm.iter_therm, engine, 0.9);
-            double dt_max = sm.dt;
-            G.HMC_fix_nosplit(sm.L, dt_max, sm.iter_therm, engine, 0.4);
+            double dt_min = 0.005;
+            G.HMC_fix_nosplit(sm.L, dt_min, sm.iter_therm, engine, sm.AR+sm.dAR);
+            double dt_max = 0.005;
+            G.HMC_fix_nosplit(sm.L, dt_max, sm.iter_therm, engine, sm.AR-sm.dAR);
             
             // Start run
-            double ar = G.HMC_rand_nosplit(sm.L, sm.L, dt_min, dt_max, sm.iter_therm, 1, engine, out_s);
+            double ar = G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_therm, 1, engine, out_s);
             
             // Output log
             clog << "Preliminary run end timestamp: " << time(NULL) << endl;
@@ -180,13 +146,13 @@ int main(int argc, char** argv)
         else if(sm.mode == "rand_split")
         {
             // Thermalize
-            double dt_min = sm.dt;
-            G.HMC_fix_split(sm.L, dt_min, sm.M, sm.iter_therm, engine, 0.9);
-            double dt_max = sm.dt;
-            G.HMC_fix_split(sm.L, dt_max, sm.M, sm.iter_therm, engine, 0.4);
+            double dt_min = 0.005;
+            G.HMC_fix_split(sm.L, dt_min, sm.M, sm.iter_therm, engine, sm.AR+sm.dAR);
+            double dt_max = 0.005;
+            G.HMC_fix_split(sm.L, dt_max, sm.M, sm.iter_therm, engine, sm.AR-sm.dAR);
             
             // Start run
-            double ar = G.HMC_rand_split(sm.L, sm.L, dt_min, dt_max, sm.M, sm.iter_therm, 1, engine, out_s);
+            double ar = G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_therm, 1, engine, out_s);
             
             // Output log
             clog << "Preliminary run end timestamp: " << time(NULL) << endl;
@@ -212,50 +178,4 @@ int main(int argc, char** argv)
     gsl_rng_free(engine);
 
     return 0;
-}
-
-
-bool read_init_stream(istream& in, struct Simul_params& sm)
-{
-    bool success = false;
-    if(in)
-    {
-        string temp;
-        
-        in >> temp >> sm.p;
-        sm.valid += temp;
-        in >> temp >> sm.q;
-        sm.valid += temp;
-        in >> temp >> sm.dim;
-        sm.valid += temp;
-        in >> temp >> sm.L;
-        sm.valid += temp;
-        in >> temp >> sm.dt;
-        sm.valid += temp;
-        in >> temp >> sm.M;
-        sm.valid += temp;
-        in >> temp >> sm.iter_therm;
-        sm.valid += temp;
-        in >> temp >> sm.iter_simul;
-        sm.valid += temp;
-        in >> temp >> sm.gap;
-        sm.valid += temp;
-        in >> temp >> sm.g2_i;
-        sm.valid += temp;
-        in >> temp >> sm.g2_f;
-        sm.valid += temp;
-        in >> temp >> sm.g2_step;
-        sm.valid += temp;
-        in >> temp >> sm.mode;
-        sm.valid += temp;
-
-        success = true;
-    }
-
-    return success;
-}
-
-bool params_validity(struct Simul_params& sm)
-{
-    return sm.valid == "p:q:dim:L:dt:M:iter_therm:iter_simul:gap:g2_i:g2_f:g2_step:mode:";
 }

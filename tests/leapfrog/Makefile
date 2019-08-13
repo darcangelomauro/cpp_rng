@@ -21,7 +21,7 @@ all: rmxeq mkdep mkxeq
 
 MAIN = base quadratic reversibility env
 
-SOURCE = clifford geometry 
+SOURCE = clifford geometry utils HMC_core HMC_fix_nosplit HMC_fix_split HMC_rand_nosplit HMC_rand_split leapfrog MMC 
 
 # search path for modules
 
