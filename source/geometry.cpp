@@ -343,6 +343,24 @@ void Geom24::print_omega_table_4() const
     }
 }
 
+void Geom24::adjust()
+{
+    // hermitianize
+    for(int i=0; i<nHL; ++i)
+        mat[i] = 0.5*(mat[i]+mat[i].t());
+
+    // tracelessitize
+    for(int i=nH; i<nHL; ++i)
+    {
+        double tr = trace(mat[i]).real()/dim;
+        cx_mat idty(dim, dim, fill::eye);
+        mat[i] = mat[i] - tr*idty;
+    }
+}
+        
+
+
+
 
 
 cx_mat Geom24::build_dirac() const

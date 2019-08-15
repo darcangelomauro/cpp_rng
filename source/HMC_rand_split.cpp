@@ -6,7 +6,7 @@ using namespace arma;
 
 
 // HMC routine that doesn't performs dual averaging and outputs S2, S4, H, L
-double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double& dt_min, const double& dt_max, const int& M, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double& dt_min, const double& dt_max, const int& M, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -35,6 +35,9 @@ double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double
         // core part of HMC
         Stat += HMC_rand_split_core(Nt_min, Nt_max, dt_min, dt_max, M, engine, en_i, en_f);
         
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // print once every "gap" iterations
         if( !(i%gap) )
         {
@@ -61,7 +64,7 @@ double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double
 }
 
 // HMC routine that doesn't performs dual averaging and outputs S2, S4
-double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double& dt_min, const double& dt_max, const int& M, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s)
+double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double& dt_min, const double& dt_max, const int& M, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -90,6 +93,9 @@ double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double
         // core part of HMC
         Stat += HMC_rand_split_core(Nt_min, Nt_max, dt_min, dt_max, M, engine, en_i, en_f);
         
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // print once every "gap" iterations
         if( !(i%gap) )
         {
@@ -105,7 +111,7 @@ double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double
 }
 
 // HMC routine that doesn't performs dual averaging and doesn't output
-double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double& dt_min, const double& dt_max, const int& M, const int& iter, gsl_rng* engine)
+double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double& dt_min, const double& dt_max, const int& M, const int& iter, const int& adj, gsl_rng* engine)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -133,6 +139,9 @@ double Geom24::HMC_rand_split(const int& Nt_min, const int& Nt_max, const double
         
         // core part of HMC
         Stat += HMC_rand_split_core(Nt_min, Nt_max, dt_min, dt_max, M, engine, en_i, en_f);
+        
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
     }
 
     delete [] en_i;

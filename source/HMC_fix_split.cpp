@@ -6,7 +6,7 @@ using namespace arma;
 
 
 // HMC routine that performs dual averaging and outputs S2, S4, H, L
-double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
+double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -34,9 +34,12 @@ double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int&
         }
 
         
-        // core part of HMC
+        // core part of t int& adj, MC
         Stat += asymp - HMC_fix_split_core(Nt, dt, M, engine, en_i, en_f);
         
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // print once every "gap" iterations
         if( !(i%gap) )
         {
@@ -73,7 +76,7 @@ double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int&
 }
 
 // HMC routine that performs dual averaging and outputs S2, S4
-double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
+double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -104,6 +107,9 @@ double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int&
         // core part of HMC
         Stat += asymp - HMC_fix_split_core(Nt, dt, M, engine, en_i, en_f);
         
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // print once every "gap" iterations
         if( !(i%gap) )
         {
@@ -129,7 +135,7 @@ double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int&
 }
 
 // HMC routine that performs dual averaging and doesn't output
-double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int& iter, gsl_rng* engine, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
+double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int& iter, const int& adj, gsl_rng* engine, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -160,6 +166,9 @@ double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int&
         // core part of HMC
         Stat += asymp - HMC_fix_split_core(Nt, dt, M, engine, en_i, en_f);
         
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // perform dual averaging on dt
         double log_dt = mu - Stat*sqrt(i+1)/(shr*(i+1+i0));
         dt = exp(log_dt);
@@ -178,7 +187,7 @@ double Geom24::HMC_fix_split(const int& Nt, double& dt, const int& M, const int&
 }
 
 // HMC routine that doesn't performs dual averaging and outputs S2, S4, H, L
-double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, const int& iter, const int& adj, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -207,6 +216,9 @@ double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, cons
         // core part of HMC
         Stat += HMC_fix_split_core(Nt, dt, M, engine, en_i, en_f);
         
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // print once every "gap" iterations
         if( !(i%gap) )
         {
@@ -233,7 +245,7 @@ double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, cons
 }
 
 // HMC routine that doesn't performs dual averaging and outputs S2, S4
-double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s)
+double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -262,6 +274,9 @@ double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, cons
         // core part of HMC
         Stat += HMC_fix_split_core(Nt, dt, M, engine, en_i, en_f);
         
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // print once every "gap" iterations
         if( !(i%gap) )
         {
@@ -277,7 +292,7 @@ double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, cons
 }
 
 // HMC routine that doesn't performs dual averaging and doesn't output
-double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, const int& iter, gsl_rng* engine)
+double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, const int& iter, const int& adj, gsl_rng* engine)
 {
     // initial (_i) and final (_f) potential2, potential4, kinetic, hamiltonian 
     double* en_i = new double [4];
@@ -305,6 +320,9 @@ double Geom24::HMC_fix_split(const int& Nt, const double& dt, const int& M, cons
         
         // core part of HMC
         Stat += HMC_fix_split_core(Nt, dt, M, engine, en_i, en_f);
+        
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
     }
 
     delete [] en_i;

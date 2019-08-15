@@ -88,10 +88,10 @@ int main(int argc, char** argv)
         {
             // Thermalize
             double dt = 0.005;
-            G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, engine, sm.AR);
+            G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, sm.adj, engine, sm.AR);
             
             // Start run
-            double ar = G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, 1, engine, out_s);
+            double ar = G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, 1, sm.adj, engine, out_s);
             
             // Output log
             clog << "Preliminary run end timestamp: " << time(NULL) << endl;
@@ -107,10 +107,10 @@ int main(int argc, char** argv)
         {
             // Thermalize
             double dt = 0.005;
-            G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, engine, sm.AR);
+            G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, sm.adj, engine, sm.AR);
             
             // Start run
-            double ar = G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, 1, engine, out_s);
+            double ar = G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, 1, sm.adj, engine, out_s);
             
             // Output log
             clog << "Preliminary run end timestamp: " << time(NULL) << endl;
@@ -126,12 +126,12 @@ int main(int argc, char** argv)
         {
             // Thermalize
             double dt_min = 0.005;
-            G.HMC_fix_nosplit(sm.L, dt_min, sm.iter_therm, engine, sm.AR+sm.dAR);
+            G.HMC_fix_nosplit(sm.L, dt_min, sm.iter_therm, sm.adj, engine, sm.AR+sm.dAR);
             double dt_max = 0.005;
-            G.HMC_fix_nosplit(sm.L, dt_max, sm.iter_therm, engine, sm.AR-sm.dAR);
+            G.HMC_fix_nosplit(sm.L, dt_max, sm.iter_therm, sm.adj, engine, sm.AR-sm.dAR);
             
             // Start run
-            double ar = G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_therm, 1, engine, out_s);
+            double ar = G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_therm, 1, sm.adj, engine, out_s);
             
             // Output log
             clog << "Preliminary run end timestamp: " << time(NULL) << endl;
@@ -147,12 +147,12 @@ int main(int argc, char** argv)
         {
             // Thermalize
             double dt_min = 0.005;
-            G.HMC_fix_split(sm.L, dt_min, sm.M, sm.iter_therm, engine, sm.AR+sm.dAR);
+            G.HMC_fix_split(sm.L, dt_min, sm.M, sm.iter_therm, sm.adj, engine, sm.AR+sm.dAR);
             double dt_max = 0.005;
-            G.HMC_fix_split(sm.L, dt_max, sm.M, sm.iter_therm, engine, sm.AR-sm.dAR);
+            G.HMC_fix_split(sm.L, dt_max, sm.M, sm.iter_therm, sm.adj, engine, sm.AR-sm.dAR);
             
             // Start run
-            double ar = G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_therm, 1, engine, out_s);
+            double ar = G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_therm, 1, sm.adj, engine, out_s);
             
             // Output log
             clog << "Preliminary run end timestamp: " << time(NULL) << endl;

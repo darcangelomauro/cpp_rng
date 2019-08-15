@@ -88,7 +88,7 @@ int main(int argc, char** argv)
             // THERMALIZATION
             double dt = 0.005;
             clog << "Thermalization start timestamp: " << time(NULL) << endl;
-            G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, engine, sm.AR);
+            G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, sm.adj, engine, sm.AR);
             clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
 
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
             in_dt >> dt;
 
             clog << "Simulation start timestamp: " << time(NULL) << endl;
-            double ar = G.HMC_fix_nosplit(sm.L, dt, sm.iter_simul, sm.gap, engine, out_s, out_hl);
+            double ar = G.HMC_fix_nosplit(sm.L, dt, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
             clog << "Simulation end timestamp: " << time(NULL) << endl;
 
             out_s.close();
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
             // THERMALIZATION
             double dt = 0.005;
             clog << "Thermalization start timestamp: " << time(NULL) << endl;
-            G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, engine, sm.AR);
+            G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, sm.adj, engine, sm.AR);
             clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
 
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
             in_dt >> dt;
 
             clog << "Simulation start timestamp: " << time(NULL) << endl;
-            double ar = G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_simul, sm.gap, engine, out_s, out_hl);
+            double ar = G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
             clog << "Simulation end timestamp: " << time(NULL) << endl;
 
             out_s.close();
@@ -146,10 +146,10 @@ int main(int argc, char** argv)
             // THERMALIZATION
             double dt = 0.005;
             clog << "Thermalization start timestamp: " << time(NULL) << endl;
-            G.HMC_fix_nosplit(sm.L, dt, 100, engine, sm.AR);
+            G.HMC_fix_nosplit(sm.L, dt, 100, sm.adj, engine, sm.AR);
             double dt_min, dt_max;
             in_dt >> dt_min >> dt_max;
-            G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_therm, engine);
+            G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_therm, sm.adj, engine);
             clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
 
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
             out_hl.open(out_filename + "_HL.txt");
             
             clog << "Simulation start timestamp: " << time(NULL) << endl;
-            double ar = G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_simul, sm.gap, engine, out_s, out_hl);
+            double ar = G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
             clog << "Simulation end timestamp: " << time(NULL) << endl;
 
             out_s.close();
@@ -176,10 +176,10 @@ int main(int argc, char** argv)
             // THERMALIZATION
             double dt = 0.005;
             clog << "Thermalization start timestamp: " << time(NULL) << endl;
-            G.HMC_fix_split(sm.L, dt, sm.M, 100, engine, sm.AR);
+            G.HMC_fix_split(sm.L, dt, sm.M, 100, sm.adj, engine, sm.AR);
             double dt_min, dt_max;
             in_dt >> dt_min >> dt_max;
-            G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_therm, engine);
+            G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_therm, sm.adj, engine);
             clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
 
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
             out_hl.open(out_filename + "_HL.txt");
             
             clog << "Simulation start timestamp: " << time(NULL) << endl;
-            double ar = G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_simul, sm.gap, engine, out_s, out_hl);
+            double ar = G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
             clog << "Simulation end timestamp: " << time(NULL) << endl;
 
             out_s.close();

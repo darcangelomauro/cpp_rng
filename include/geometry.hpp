@@ -71,27 +71,27 @@ class Geom24
         void leapfrog(const int&, const double&);
         void leapfrog(const int&, const double&, const int&);
         double HMC_fix_nosplit_core(const int&, const double&, gsl_rng*, double*, double*);
-        double HMC_fix_nosplit(const int&, double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double HMC_fix_nosplit(const int&, double&, const int&, const int&, gsl_rng*, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double HMC_fix_nosplit(const int&, double&, const int&, gsl_rng*, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double HMC_fix_nosplit(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
-        double HMC_fix_nosplit(const int&, const double&, const int&, const int&, gsl_rng*, std::ostream&);
-        double HMC_fix_nosplit(const int&, const double&, const int&, gsl_rng*);
+        double HMC_fix_nosplit(const int&, double&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC_fix_nosplit(const int&, double&, const int&, const int&, const int&, gsl_rng*, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC_fix_nosplit(const int&, double&, const int&, const int&, gsl_rng*, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC_fix_nosplit(const int&, const double&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC_fix_nosplit(const int&, const double&, const int&, const int&, const int&, gsl_rng*, std::ostream&);
+        double HMC_fix_nosplit(const int&, const double&, const int&, const int&, gsl_rng*);
         double HMC_fix_split_core(const int&, const double&, const int&, gsl_rng*, double*, double*);
-        double HMC_fix_split(const int&, double&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double HMC_fix_split(const int&, double&, const int&, const int&, const int&, gsl_rng*, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double HMC_fix_split(const int&, double&, const int&, const int&, gsl_rng*, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double HMC_fix_split(const int&, const double&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
-        double HMC_fix_split(const int&, const double&, const int&, const int&, const int&, gsl_rng*, std::ostream&);
-        double HMC_fix_split(const int&, const double&, const int&, const int&, gsl_rng*);
+        double HMC_fix_split(const int&, double&, const int&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC_fix_split(const int&, double&, const int&, const int&, const int&, const int&, gsl_rng*, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC_fix_split(const int&, double&, const int&, const int&, const int&, gsl_rng*, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double HMC_fix_split(const int&, const double&, const int&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC_fix_split(const int&, const double&, const int&, const int&, const int&, const int&, gsl_rng*, std::ostream&);
+        double HMC_fix_split(const int&, const double&, const int&, const int&, const int&, gsl_rng*);
         double HMC_rand_nosplit_core(const int&, const int&, const double&, const double&, gsl_rng*, double*, double*);
-        double HMC_rand_nosplit(const int&, const int&, const double&, const double&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
-        double HMC_rand_nosplit(const int&, const int&, const double&, const double&, const int&, const int&, gsl_rng*, std::ostream&);
-        double HMC_rand_nosplit(const int&, const int&, const double&, const double&, const int&, gsl_rng*);
+        double HMC_rand_nosplit(const int&, const int&, const double&, const double&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC_rand_nosplit(const int&, const int&, const double&, const double&, const int&, const int&, const int&, gsl_rng*, std::ostream&);
+        double HMC_rand_nosplit(const int&, const int&, const double&, const double&, const int&, const int&, gsl_rng*);
         double HMC_rand_split_core(const int&, const int&, const double&, const double&, const int&, gsl_rng*, double*, double*);
-        double HMC_rand_split(const int&, const int&, const double&, const double&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
-        double HMC_rand_split(const int&, const int&, const double&, const double&, const int&, const int&, const int&, gsl_rng*, std::ostream&);
-        double HMC_rand_split(const int&, const int&, const double&, const double&, const int&, const int&, gsl_rng*);
+        double HMC_rand_split(const int&, const int&, const double&, const double&, const int&, const int&, const int&, const int&, gsl_rng*, std::ostream&, std::ostream&);
+        double HMC_rand_split(const int&, const int&, const double&, const double&, const int&, const int&, const int&, const int&, gsl_rng*, std::ostream&);
+        double HMC_rand_split(const int&, const int&, const double&, const double&, const int&, const int&, const int&, gsl_rng*);
         // ============== HAMILTONIAN METHODS
         
         // ============== METROPOLIS METHODS
@@ -114,6 +114,7 @@ class Geom24
         void reverse_mom();
         void init_omega_table_4();
         void print_omega_table_4() const;
+        void adjust();
         std::istream& read_parameters(std::istream& in);
 
 
