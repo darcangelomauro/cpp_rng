@@ -13,12 +13,12 @@ using namespace arma;
 int main()
 {
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
-    gsl_rng_set(engine, 222222);
+    gsl_rng_set(engine, time(NULL));
 
     //const double L = 1;
 
     // create geometry from input
-    Geom24 G(1, 1, 20, -2.5);
+    Geom24 G(0, 3, 16, -4.45);
     
     //G.shuffle();
     G.sample_mom(engine);
@@ -26,7 +26,7 @@ int main()
     double Si = G.calculate_S();
     double Ki = G.calculate_K();
     clock_t start1 = clock();
-    G.leapfrog(100, 0.0001);
+    G.leapfrog(100, 0.0001, 100);
     clock_t end = clock();
     double Sf = G.calculate_S();
     double Kf = G.calculate_K();

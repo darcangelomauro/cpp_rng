@@ -49,7 +49,7 @@ int main()
 
         double Si = G.calculate_S();
         double Ki = G.calculate_K();
-        G.leapfrog(1000, tau);
+        G.leapfrog(1000, tau, 10);
         double Sf = G.calculate_S();
         double Kf = G.calculate_K();
         out << log(tau) << " " << log(fabs(Sf+Kf-Si-Ki)) << endl;

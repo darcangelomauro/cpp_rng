@@ -14,7 +14,7 @@ using namespace arma;
 int main()
 {
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
-    gsl_rng_set(engine, 222222);
+    gsl_rng_set(engine, time(NULL));
 
     //const double L = 1;
 
@@ -32,7 +32,7 @@ int main()
     out << S << " "<< K << " " << S+K << endl;
     for(int i=0; i<100; ++i)
     {
-        G.leapfrog(100, 0.0001);
+        G.leapfrog(100, 0.0001, 10);
         S = G.calculate_S();
         K = G.calculate_K();
         out << S << " "<< K << " " << S+K << endl;
