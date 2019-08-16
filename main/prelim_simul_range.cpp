@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     if(argc != 2)
     {
         cerr << "Error: need to pass global seed as arguments." << endl;
-        return 0;
+        return 1;
     }
     // Convert argument to unsigned long.
     unsigned long global_seed = stoul(argv[1]);
@@ -45,15 +45,16 @@ int main(int argc, char** argv)
     if(!read_init_stream(in_init, sm))
     {
         cerr << "Error: couldn't read file " + init_filename << endl;
-        return 0;
+        return 1;
     }
+
+    clog << "File " + init_filename + " contains the following parameters:" << endl;
+    clog << sm.control << endl;
 
     if(!params_validity(sm))
     {
-        cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
-        cerr << "The correct formatting is " << sm.control << endl;
-        cerr << "Validity string:          " << sm.valid << endl;
-        return 0;
+        cerr << "Error: file " + init_filename + " does not contain the necessary parameters." << endl;
+        return 1;
     }
 
     in_init.close();
@@ -64,10 +65,10 @@ int main(int argc, char** argv)
 
     //********* BEGIN PRELIMINARY MONTE CARLO RUN **********//
     
-    // Output file with final dt values for each g2
-    string dt_filename = foldername + "dt.txt";
-    ofstream out_dt;
-    out_dt.open(dt_filename);
+    // Output file with final dt or scale values for each g2
+    string duav_filename = foldername + "duav.txt";
+    ofstream out_duav;
+    out_duav.open(duav_filename);
 
     double g2 = sm.g2_i;
     while(g2 < sm.g2_f)
@@ -100,7 +101,7 @@ int main(int argc, char** argv)
             clog << endl;
             
             // Write final value of dt
-            out_dt << g2 << " " << dt << endl;
+            out_duav << g2 << " " << dt << endl;
         }
 
         else if(sm.mode == "fix_split")
@@ -119,7 +120,7 @@ int main(int argc, char** argv)
             clog << endl;
             
             // Write final value of dt
-            out_dt << g2 << " " << dt << endl;
+            out_duav << g2 << " " << dt << endl;
         }
 
         else if(sm.mode == "rand_nosplit")
@@ -140,7 +141,7 @@ int main(int argc, char** argv)
             clog << endl;
             
             // Write final value of dt
-            out_dt << g2 << " " << dt_min << " " << dt_max << endl;
+            out_duav << g2 << " " << dt_min << " " << dt_max << endl;
         }
         
         else if(sm.mode == "rand_split")
@@ -161,9 +162,27 @@ int main(int argc, char** argv)
             clog << endl;
             
             // Write final value of dt
-            out_dt << g2 << " " << dt_min << " " << dt_max << endl;
+            out_duav << g2 << " " << dt_min << " " << dt_max << endl;
         }
         
+        else if(sm.mode == "mmc")
+        {
+            // Thermalize
+            double scale = 0.005;
+            G.MMC(scale, sm.iter_therm, sm.adj, engine, sm.AR);
+            
+            // Start run
+            double ar = G.MMC(scale, sm.iter_therm, 1, sm.adj, engine, out_s);
+            
+            // Output log
+            clog << "Preliminary run end timestamp: " << time(NULL) << endl;
+            clog << "Metropolis scale: " << scale << endl;
+            clog << "Acceptance rate: " << ar << endl;
+            clog << endl;
+            
+            // Write final value of scale
+            out_duav << g2 << " " << scale << endl;
+        }
         
         out_s.close();
         
@@ -174,7 +193,7 @@ int main(int argc, char** argv)
     
     //********* END PRELIMINARY MONTE CARLO RUN **********//
 
-    out_dt.close();
+    out_duav.close();
     gsl_rng_free(engine);
 
     return 0;

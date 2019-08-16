@@ -99,12 +99,12 @@ class Geom24
         double delta4(const int&, const int&, const int&, const arma::cx_double&);
         double delta24(const int&, const int&, const int&, const arma::cx_double&);
         double MMC_core(const double&, gsl_rng*, double*, double*);
-        double MMC(double&, const int&, const int&, gsl_rng* engine, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double MMC(double&, const int&, const int&, gsl_rng* engine, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double MMC(double&, const int&, gsl_rng* engine, const double&, const double& =0.05, const double& =0.75, const int& =10);
-        double MMC(const double&, const int&, const int&, gsl_rng* engine, std::ostream&, std::ostream&);
-        double MMC(const double&, const int&, const int&, gsl_rng* engine, std::ostream&);
-        double MMC(const double&, const int&, gsl_rng* engine);
+        double MMC(double&, const int&, const int&, const int&, gsl_rng* engine, std::ostream&, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double MMC(double&, const int&, const int&, const int&, gsl_rng* engine, std::ostream&, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double MMC(double&, const int&, const int&, gsl_rng* engine, const double&, const double& =0.05, const double& =0.75, const int& =10);
+        double MMC(const double&, const int&, const int&, const int&, gsl_rng* engine, std::ostream&, std::ostream&);
+        double MMC(const double&, const int&, const int&, const int&, gsl_rng* engine, std::ostream&);
+        double MMC(const double&, const int&, const int&, gsl_rng* engine);
         void delta24_debug(const double&, const int&, gsl_rng*, std::ostream&);
         // ============== METROPOLIS METHODS
         

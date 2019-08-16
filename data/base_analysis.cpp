@@ -49,11 +49,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    cout << "File " + init_filename + " contains the following parameters:" << endl;
+    cout << sm.control << endl;
+
     if(!params_validity(sm))
     {
-        cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
-        cerr << "The correct formatting is " << sm.control << endl;
-        cerr << "Validity string:          " << sm.valid << endl;
+        cerr << "Error: file " + init_filename + " does not contain the necessary parameters." << endl;
         return 1;
     }
 

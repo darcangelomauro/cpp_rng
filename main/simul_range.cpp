@@ -52,12 +52,13 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    clog << "File " + init_filename + " contains the following parameters:" << endl;
+    clog << sm.control << endl;
+
     if(!params_validity(sm))
     {
-        cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
-        cerr << "The correct formatting is " << sm.control << endl;
-        cerr << "Validity string:          " << sm.valid << endl;
-        return 0;
+        cerr << "Error: file " + init_filename + " does not contain the necessary parameters." << endl;
+        return 1;
     }
 
     in_init.close();
@@ -70,13 +71,13 @@ int main(int argc, char** argv)
     clog << "RNG seed: " << global_seed+local_rank << endl << endl;
 
     // Open file with precomputed dt values for each g2
-    string dt_filename = localpath + "dt.tmp";
-    ifstream in_dt;
-    in_dt.open(dt_filename);
+    string duav_filename = localpath + "duav.tmp";
+    ifstream in_duav;
+    in_duav.open(duav_filename);
     
     string prefix = "GEOM";
     double g2;
-    while(in_dt >> g2)
+    while(in_duav >> g2)
     {
         // Create geometry
         Geom24 G(sm.p, sm.q, sm.dim, g2);
@@ -98,7 +99,7 @@ int main(int argc, char** argv)
             out_s.open(out_filename + "_S.txt");
             out_hl.open(out_filename + "_HL.txt");
             
-            in_dt >> dt;
+            in_duav >> dt;
 
             clog << "Simulation start timestamp: " << time(NULL) << endl;
             double ar = G.HMC_fix_nosplit(sm.L, dt, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
@@ -127,7 +128,7 @@ int main(int argc, char** argv)
             out_s.open(out_filename + "_S.txt");
             out_hl.open(out_filename + "_HL.txt");
             
-            in_dt >> dt;
+            in_duav >> dt;
 
             clog << "Simulation start timestamp: " << time(NULL) << endl;
             double ar = G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
@@ -146,10 +147,7 @@ int main(int argc, char** argv)
             // THERMALIZATION
             double dt = 0.005;
             clog << "Thermalization start timestamp: " << time(NULL) << endl;
-            G.HMC_fix_nosplit(sm.L, dt, 100, sm.adj, engine, sm.AR);
-            double dt_min, dt_max;
-            in_dt >> dt_min >> dt_max;
-            G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_therm, sm.adj, engine);
+            G.HMC_fix_nosplit(sm.L, dt, sm.iter_therm, sm.adj, engine, sm.AR);
             clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
 
@@ -158,6 +156,9 @@ int main(int argc, char** argv)
             string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
             out_s.open(out_filename + "_S.txt");
             out_hl.open(out_filename + "_HL.txt");
+            
+            double dt_min, dt_max;
+            in_duav >> dt_min >> dt_max;
             
             clog << "Simulation start timestamp: " << time(NULL) << endl;
             double ar = G.HMC_rand_nosplit(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
@@ -176,10 +177,7 @@ int main(int argc, char** argv)
             // THERMALIZATION
             double dt = 0.005;
             clog << "Thermalization start timestamp: " << time(NULL) << endl;
-            G.HMC_fix_split(sm.L, dt, sm.M, 100, sm.adj, engine, sm.AR);
-            double dt_min, dt_max;
-            in_dt >> dt_min >> dt_max;
-            G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_therm, sm.adj, engine);
+            G.HMC_fix_split(sm.L, dt, sm.M, sm.iter_therm, sm.adj, engine, sm.AR);
             clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
 
@@ -188,6 +186,9 @@ int main(int argc, char** argv)
             string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
             out_s.open(out_filename + "_S.txt");
             out_hl.open(out_filename + "_HL.txt");
+            
+            double dt_min, dt_max;
+            in_duav >> dt_min >> dt_max;
             
             clog << "Simulation start timestamp: " << time(NULL) << endl;
             double ar = G.HMC_rand_split(sm.L-sm.dL, sm.L+sm.dL, dt_min, dt_max, sm.M, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
@@ -199,11 +200,39 @@ int main(int argc, char** argv)
             clog << "Integration step: " << dt_min << " " << dt_max << endl;
             clog << "Acceptance rate: " << ar << endl;
             clog << endl;
+        }
+        
+        else if(sm.mode == "mmc")
+        {
+            // THERMALIZATION
+            double scale = 0.005;
+            clog << "Thermalization start timestamp: " << time(NULL) << endl;
+            G.MMC(scale, sm.iter_therm, sm.adj, engine, sm.AR);
+            clog << "Thermalization end timestamp: " << time(NULL) << endl;
 
+
+            // SIMULATION
+            ofstream out_s, out_hl;
+            string out_filename = localpath + filename_from_data(sm.p, sm.q, sm.dim, g2, prefix);
+            out_s.open(out_filename + "_S.txt");
+            out_hl.open(out_filename + "_HL.txt");
+            
+            in_duav >> scale;
+
+            clog << "Simulation start timestamp: " << time(NULL) << endl;
+            double ar = G.MMC(scale, sm.iter_simul, sm.gap, sm.adj, engine, out_s, out_hl);
+            clog << "Simulation end timestamp: " << time(NULL) << endl;
+
+            out_s.close();
+            out_hl.close();
+
+            clog << "Metropolis scale: " << scale << endl;
+            clog << "Acceptance rate: " << ar << endl;
+            clog << endl;
         }
     }
 
-    in_dt.close();
+    in_duav.close();
     
     
     //********* END MONTE CARLO **********//

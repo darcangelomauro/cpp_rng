@@ -5,13 +5,17 @@
 #include <string>
 
 // Struct that packs the simulation
-// parameters for hmc all together.
+// parameters all together (hmc and mmc).
 // 
 // Explanation of integration parameters:
 //
-// L    =   # of integration steps
+// L    =   # of integration steps in leapfrog
 // 
 // dL   =   randomize L in interval [L-dL, L+dL]
+//
+// dt   =   integration stepsize in leapfrog
+//
+// ddt  =   randomize dt in interval [dt-ddt, dt+ddt]
 //
 // AR   =   target acceptance rate
 // 
@@ -24,6 +28,8 @@
 //
 // Explanation of other parameters:
 //
+// scale        =   metropolis scale factor
+//
 // iter_therm   =   # of thermalization iterations
 // 
 // iter_simul   =   # of data-collecting iterations
@@ -34,7 +40,7 @@
 // adj          =   # of iterations to be skipped between
 //                  two applications of hermitization + tracelessization
 //
-// Explanation of HMC mode:
+// Explanation of MC mode:
 //
 // fix_nosplit  =   don't randomize dt or L, don't split hamiltonian
 //
@@ -43,6 +49,8 @@
 // rand_nosplit =   randomize dt and L, don't split hamiltonian
 //
 // rand_split   =   randomize dt and L, split hamiltonian
+//
+// mmc          =   metropolis
 //
 struct Simul_params
 {
@@ -53,36 +61,38 @@ struct Simul_params
 
     // Integration parameters
     int L;
-    int dL;
+    int dL=0;
+    double dt;
+    double ddt=0;
     double AR;
-    double dAR;
-    int M;
+    double dAR=0;
+    int M=10;
+
+    // Metropolis parameters
+    double scale;
 
     // Other parameters
     int iter_therm;
     int iter_simul;
-    int gap;
-    int adj;
+    int gap=1000;
+    int adj=1000;
 
     double g2_i;
-    double g2_f;
-    double g2_step;
+    double g2_f=0;
+    double g2_step=100000;
 
-    // HMC mode
+    // MC mode
     std::string mode;
 
-    // Validity string
-    std::string valid;
-    std::string control = "p:q:dim:L:dL:AR:dAR:M:iter_therm:iter_simul:gap:adj:g2_i:g2_f:g2_step:mode:";
+    // Control string
+    std::string control;
 };
 
 // Function to read simulation parameters from stream
 bool read_init_stream(std::istream&, struct Simul_params&);
 
-// Function to check whether parameters have been entered in the
-// correct order
+// Checks that the necessary parameters are there
 bool params_validity(struct Simul_params&);
-
 
 #endif
 

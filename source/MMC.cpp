@@ -89,7 +89,7 @@ double Geom24::MMC_core(const double& scale, gsl_rng* engine, double* s_i, doubl
 
 
 // MMC routine that performs dual averaging and outputs S2, S4, H, L
-double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
+double Geom24::MMC(double& scale, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s, ostream& out_hl, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -131,7 +131,9 @@ double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engi
             log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
         }
 
-        
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // print every "gap" iteration
         if( !(i%gap) )
         {
@@ -161,7 +163,7 @@ double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engi
 }
 
 // MMC routine that performs dual averaging and outputs S2, S4
-double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
+double Geom24::MMC(double& scale, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -203,7 +205,9 @@ double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engi
             log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
         }
 
-        
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
+
         // print every "gap" iteration
         if( !(i%gap) )
         {
@@ -222,7 +226,7 @@ double Geom24::MMC(double& scale, const int& iter, const int& gap, gsl_rng* engi
 }
 
 // MMC routine that performs dual averaging and doesn't output
-double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
+double Geom24::MMC(double& scale, const int& iter, const int& adj, gsl_rng* engine, const double& asymp, const double& shr/*=0.05*/, const double& kappa/*=0.75*/, const int& i0/*=10*/)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -263,6 +267,9 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, const double
             double eta = pow(i+1, -kappa);
             log_scale_avg = eta*log_scale + (1-eta)*log_scale_avg;
         }
+        
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
     }
     
     // set scale on its final dual averaged value
@@ -275,7 +282,7 @@ double Geom24::MMC(double& scale, const int& iter, gsl_rng* engine, const double
 }
 
 // MMC routine that doesn't perform dual averaging and outputs S2, S4, H, L
-double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s, ostream& out_hl)
+double Geom24::MMC(const double& scale, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s, ostream& out_hl)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -309,6 +316,8 @@ double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng
             Stat += MMC_core(scale, engine, s_i, s_f);
         }
 
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
         
         // print every "gap" iteration
         if( !(i%gap) )
@@ -336,7 +345,7 @@ double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng
 }
 
 // MMC routine that doesn't perform dual averaging and outputs S2, S4
-double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng* engine, ostream& out_s)
+double Geom24::MMC(const double& scale, const int& iter, const int& gap, const int& adj, gsl_rng* engine, ostream& out_s)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -370,6 +379,8 @@ double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng
             Stat += MMC_core(scale, engine, s_i, s_f);
         }
 
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
         
         // print every "gap" iteration
         if( !(i%gap) )
@@ -386,7 +397,7 @@ double Geom24::MMC(const double& scale, const int& iter, const int& gap, gsl_rng
 }
 
 // MMC routine that doesn't perform dual averaging and doesn't output
-double Geom24::MMC(const double& scale, const int& iter, gsl_rng* engine)
+double Geom24::MMC(const double& scale, const int& iter, const int& adj, gsl_rng* engine)
 {
     // initial (_i) and final (_f) action2 and action4 
     double* s_i = new double [2];
@@ -419,6 +430,9 @@ double Geom24::MMC(const double& scale, const int& iter, gsl_rng* engine)
             
             Stat += MMC_core(scale, engine, s_i, s_f);
         }
+        
+        // adjust once every "adj" iterations
+        if( !(i%adj) ) adjust();
     }
     
     delete [] s_i;
