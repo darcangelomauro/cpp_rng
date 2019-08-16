@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     if(!read_init_stream(in_init, sm))
     {
         cerr << "Error: couldn't read file " + init_filename << endl;
-        return 0;
+        return 1;
     }
 
     if(!params_validity(sm))
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
         cerr << "Error: file " + init_filename + " is probably not formatted in the correct way." << endl;
         cerr << "The correct formatting is " << sm.control << endl;
         cerr << "Validity string:          " << sm.valid << endl;
-        return 0;
+        return 1;
     }
 
     in_init.close();
@@ -64,6 +64,12 @@ int main(int argc, char** argv)
     string out_filename = path + "/observables/dofs_prelim.txt";
     ofstream out_obs;
     out_obs.open(out_filename);
+
+    if(!out_obs)
+    {
+        cerr << "Error: file " + out_filename + " could not be opened." << endl;
+        return 1;
+    }
 
     // Cycle on g2 values
     double g2 = sm.g2_i;
