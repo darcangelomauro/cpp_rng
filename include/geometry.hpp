@@ -57,11 +57,17 @@ class Geom24
 
         // ============== DERIVATIVE METHODS
         arma::cx_mat compute_B4(const int&, const int&, const int&, const int&, const double&, const bool&) const;
+        arma::cx_mat compute_B4_explicit(const int&, const int&, const int&, const int&, const bool&) const;
         arma::cx_mat compute_B2(const int&, const int&) const;
+        arma::cx_mat compute_B2_iik_explicit(const int&, const int&) const;
+        arma::cx_mat compute_B2_iki_explicit(const int&, const int&) const;
         arma::cx_mat compute_B(const int&) const;
         arma::cx_mat der_dirac4(const int&, const bool&) const;
+        arma::cx_mat der_dirac4_explicit(const int&, const bool&) const;
         arma::cx_mat der_dirac2(const int&) const;
         arma::cx_mat der_dirac24(const int&, const bool&) const;
+        arma::cx_mat debug_2equal(const int&) const;
+        arma::cx_mat debug_2equal_explicit(const int&) const;
         // ============== DERIVATIVE METHODS
 
         // ============== HAMILTONIAN METHODS

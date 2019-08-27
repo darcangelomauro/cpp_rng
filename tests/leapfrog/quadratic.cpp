@@ -16,19 +16,19 @@ int main()
     gsl_rng* engine = gsl_rng_alloc(gsl_rng_ranlxd1);
     gsl_rng_set(engine, time(NULL));
 
-    //const double L = 1;
 
     // create geometry from input
     
-    double tau = 0.0001;
+    double T = 1.;
+    double tau = 0.001;
 
     ofstream out;
     out.open("data/quadratic.txt");
     out.precision(16);
 
-    while(tau >= 0.00001)
+    while(tau >= 0.0001)
     {
-        Geom24 G(2, 0, 10, -2.2431);
+        Geom24 G(0, 3, 8, -2.2431);
         G.shuffle(engine);
         G.sample_mom(engine);
         
@@ -49,7 +49,7 @@ int main()
 
         double Si = G.calculate_S();
         double Ki = G.calculate_K();
-        G.leapfrog(1000, tau, 10);
+        G.leapfrog(int(T/tau), tau);
         double Sf = G.calculate_S();
         double Kf = G.calculate_K();
         out << log(tau) << " " << log(fabs(Sf+Kf-Si-Ki)) << endl;
