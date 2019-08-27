@@ -12,6 +12,7 @@ using namespace std;
 using namespace arma;
 
 #define N 1000
+#define M 5
 
 int main()
 {
@@ -20,19 +21,19 @@ int main()
 
 
     // create geometry
-    int p = 2;
-    int q = 0;
+    int p = 0;
+    int q = 3;
     int dim = 8;
     double g2 = 2.5;
     
-    double tau[4] = {0.001, 0.0005, 0.00025, 0.000125};
+    double tau[M] = {0.001, 0.0005, 0.00025, 0.000125, 0.0000625};
 
     ofstream out;
     string name = filename_from_data(p, q, dim, g2, "LOCERR");
     out.open("data/" + name + ".txt");
     out.precision(16);
 
-    for(int i=0; i<4; ++i)
+    for(int i=0; i<M; ++i)
     {
         Geom24 G(p, q, dim, g2);
 

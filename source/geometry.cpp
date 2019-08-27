@@ -777,7 +777,7 @@ cx_mat Geom24::compute_B2(const int& k, const int& i) const
         // compute sum
         cx_mat res(dim, dim, fill::eye);
         res *= eps[k]*triki;
-        res += 2*dim*(MiMiMk + MiMiMk.t() - MiMkMi);
+        res += dim*(MiMiMk + MiMiMk.t() - MiMkMi);
         res += eps[i]*tri*(MiMk + MiMk.t());
         res += 2*eps[k]*eps[i]*trik*mat[i];
         res += eps[k]*trk*MiMi;
@@ -790,7 +790,7 @@ cx_mat Geom24::compute_B2(const int& k, const int& i) const
         // compute sum
         cx_mat res(dim, dim, fill::eye);
         res *= 3*eps[k]*triki;
-        res += 2*dim*(MiMiMk + MiMiMk.t() + MiMkMi);
+        res += dim*(MiMiMk + MiMiMk.t() + MiMkMi);
         res += 3*eps[i]*tri*(MiMk + MiMk.t());
         res += 6*eps[k]*eps[i]*trik*mat[i];
         res += 3*eps[k]*trk*MiMi;
@@ -818,7 +818,7 @@ cx_mat Geom24::compute_B2_iki_explicit(const int& k, const int& i) const
     // compute sum
     cx_mat res(dim, dim, fill::eye);
     res *= eps[k]*triki;
-    res += 2*dim*MiMkMi;
+    res += dim*MiMkMi;
     res += eps[i]*tri*(MiMk + MiMk.t());
     res += 2*eps[k]*eps[i]*trik*mat[i];
     res += eps[k]*trk*MiMi;
@@ -846,7 +846,7 @@ cx_mat Geom24::compute_B2_iik_explicit(const int& k, const int& i) const
     // compute sum
     cx_mat res(dim, dim, fill::eye);
     res *= eps[k]*triik;
-    res += dim*(MiMiMk + MiMiMk.t());
+    res += 0.5*dim*(MiMiMk + MiMiMk.t());
     res += eps[i]*tri*(MiMk + MiMk.t());
     res += 2*eps[k]*eps[i]*trik*mat[i];
     res += eps[k]*trk*MiMi;
