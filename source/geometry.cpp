@@ -968,17 +968,19 @@ cx_mat Geom24::der_dirac4_explicit(const int& k, const bool& herm) const
                             int e = eps[k]*eps[i1]*eps[i2]*eps[i3];
                             
                             // clifford product
-                            cx_double cliff = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))]; 
+                            cx_double cliff1 = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))]; 
+                            cx_double cliff2 = omega_table_4[i2 + nHL*(i3 + nHL*(i1 + nHL*k))]; 
+                            cx_double cliff3 = omega_table_4[i3 + nHL*(i1 + nHL*(i2 + nHL*k))]; 
 
-                            if(e<0 && cliff!=cx_double(0,0))
+                            if(e<0)
                             {
-                                cx_mat temp = compute_B4_explicit(k,i1,i2,i3, true) + compute_B4_explicit(k,i1,i3,i2, true) + compute_B4_explicit(k,i2,i1,i3, true);
-                                res += cliff*temp + conj(cliff)*temp.t();
+                                cx_mat temp = cliff1*compute_B4_explicit(k,i1,i2,i3, true) + cliff2*compute_B4_explicit(k,i1,i3,i2, true) + cliff3*compute_B4_explicit(k,i2,i1,i3, true);
+                                res += temp + temp.t();
                             }
-                            else if(e>0 && cliff!=cx_double(0,0))
+                            else if(e>0)
                             {
-                                cx_mat temp = compute_B4_explicit(k,i1,i2,i3, false) + compute_B4_explicit(k,i1,i3,i2, false) + compute_B4_explicit(k,i2,i1,i3, false);
-                                res += cliff*temp + conj(cliff)*temp.t();
+                                cx_mat temp = cliff1*compute_B4_explicit(k,i1,i2,i3, false) + cliff2*compute_B4_explicit(k,i1,i3,i2, false) + cliff3*compute_B4_explicit(k,i2,i1,i3, false);
+                                res += temp + temp.t();
                             }
                         }
                     }
@@ -1008,6 +1010,108 @@ cx_mat Geom24::der_dirac4_explicit(const int& k, const bool& herm) const
         return 4*res;
 }
 
+cx_mat Geom24::debug_4different(const int& k) const
+{
+    cx_mat res(dim, dim, fill::zeros);
+    
+    // four distinct indices
+    for(int i1=0; i1<nHL; ++i1)
+    {
+        if(i1 != k)
+        {
+            for(int i2=i1+1; i2<nHL; ++i2)
+            {
+                if(i2 != k)
+                {
+                    for(int i3=i2+1; i3<nHL; ++i3)
+                    {
+                        if(i3 != k)
+                        {
+                            // epsilon factor
+                            int e = eps[k]*eps[i1]*eps[i2]*eps[i3];
+
+                            if(e<0)
+                            {
+                                // clifford product
+                                double cliff1 = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].imag(); 
+                                double cliff2 = omega_table_4[i2 + nHL*(i3 + nHL*(i1 + nHL*k))].imag(); 
+                                double cliff3 = omega_table_4[i3 + nHL*(i1 + nHL*(i2 + nHL*k))].imag(); 
+
+                                if(cliff1 != 0.)
+                                {
+                                    cx_mat temp = compute_B4(k,i1,i2,i3, cliff1, true) + compute_B4(k,i1,i3,i2, cliff2, true) + compute_B4(k,i2,i1,i3, cliff3, true);
+                                    res += temp + temp.t();
+                                }
+                            }
+                            else
+                            {
+                                // clifford product
+                                double cliff1 = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].real(); 
+                                double cliff2 = omega_table_4[i2 + nHL*(i3 + nHL*(i1 + nHL*k))].real(); 
+                                double cliff3 = omega_table_4[i3 + nHL*(i1 + nHL*(i2 + nHL*k))].real(); 
+
+                                if(cliff1 != 0.)
+                                {
+                                    cx_mat temp = compute_B4(k,i1,i2,i3, cliff1, false) + compute_B4(k,i1,i3,i2, cliff2, false) + compute_B4(k,i2,i1,i3, cliff3, false);
+                                    res += temp + temp.t();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return 4*res;
+
+}
+
+cx_mat Geom24::debug_4different_explicit(const int& k) const
+{
+    cx_mat res(dim, dim, fill::zeros);
+    
+    // four distinct indices
+    for(int i1=0; i1<nHL; ++i1)
+    {
+        if(i1 != k)
+        {
+            for(int i2=i1+1; i2<nHL; ++i2)
+            {
+                if(i2 != k)
+                {
+                    for(int i3=i2+1; i3<nHL; ++i3)
+                    {
+                        if(i3 != k)
+                        {
+                            // epsilon factor
+                            int e = eps[k]*eps[i1]*eps[i2]*eps[i3];
+                            
+                            // clifford product
+                            cx_double cliff1 = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))]; 
+                            cx_double cliff2 = omega_table_4[i2 + nHL*(i3 + nHL*(i1 + nHL*k))]; 
+                            cx_double cliff3 = omega_table_4[i3 + nHL*(i1 + nHL*(i2 + nHL*k))]; 
+
+                            if(e<0)
+                            {
+                                cx_mat temp = cliff1*compute_B4_explicit(k,i1,i2,i3, true) + cliff2*compute_B4_explicit(k,i1,i3,i2, true) + cliff3*compute_B4_explicit(k,i2,i1,i3, true);
+                                res += temp + temp.t();
+                            }
+                            else if(e>0)
+                            {
+                                cx_mat temp = cliff1*compute_B4_explicit(k,i1,i2,i3, false) + cliff2*compute_B4_explicit(k,i1,i3,i2, false) + cliff3*compute_B4_explicit(k,i2,i1,i3, false);
+                                res += temp + temp.t();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return 4*res;
+}
+
 cx_mat Geom24::debug_2equal_explicit(const int& k) const
 {
     cx_mat res(dim, dim, fill::zeros);
@@ -1018,7 +1122,6 @@ cx_mat Geom24::debug_2equal_explicit(const int& k) const
         if(i != k)
         {
             cx_double cliff = omega_table_4[i + nHL*(k + nHL*(i + nHL*k))];
-            cout << cliff << endl;
             res += 2*dim_omega*compute_B2_iik_explicit(k,i);
             res += cliff*compute_B2_iki_explicit(k,i);
         }

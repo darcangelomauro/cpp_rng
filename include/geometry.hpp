@@ -68,6 +68,8 @@ class Geom24
         arma::cx_mat der_dirac24(const int&, const bool&) const;
         arma::cx_mat debug_2equal(const int&) const;
         arma::cx_mat debug_2equal_explicit(const int&) const;
+        arma::cx_mat debug_4different_explicit(const int&) const;
+        arma::cx_mat debug_4different(const int&) const;
         // ============== DERIVATIVE METHODS
 
         // ============== HAMILTONIAN METHODS

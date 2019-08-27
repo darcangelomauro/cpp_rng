@@ -20,8 +20,8 @@ int main()
 
 
     // create geometry
-    int p = 2;
-    int q = 0;
+    int p = 0;
+    int q = 3;
     int dim = 8;
     double g2 = 2.5;
     

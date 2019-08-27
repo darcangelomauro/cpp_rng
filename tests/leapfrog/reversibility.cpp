@@ -24,9 +24,9 @@ int main()
     
     double Si = G.calculate_S();
     double Ki = G.calculate_K();
-    G.leapfrog(1000, 0.0001);
+    G.leapfrog(100, 0.0001);
     G.reverse_mom(); 
-    G.leapfrog(1000, 0.0001);
+    G.leapfrog(100, 0.0001);
     G.reverse_mom(); 
     double Sf = G.calculate_S();
     double Kf = G.calculate_K();

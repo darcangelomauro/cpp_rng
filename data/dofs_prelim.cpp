@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 
         // Find theoretical value
         Geom24 G(sm.p, sm.q, 1, 1);
-        double c = G.get_nHL()*sm.dim*sm.dim;
+        double c = G.get_nHL()*sm.dim*sm.dim - G.get_nL();
 
         // Output mean and error of observable
         double avg = 0;

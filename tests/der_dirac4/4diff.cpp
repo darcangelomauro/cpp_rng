@@ -26,7 +26,7 @@ int main()
     double g2 = 2.5;
     
     ofstream out;
-    string name = filename_from_data(p, q, dim, g2, "MAT");
+    string name = filename_from_data(p, q, dim, g2, "4DIFF");
     out.open("data/" + name + ".txt");
     out.precision(16);
 
@@ -35,8 +35,8 @@ int main()
     G.shuffle(engine);
     G.sample_mom(engine);
 
-    cx_mat M1 = G.der_dirac4(0, true);
-    cx_mat M2 = G.der_dirac4_explicit(0, true);
+    cx_mat M1 = G.debug_4different_explicit(0);
+    cx_mat M2 = G.debug_4different(0);
 
     out << M1 << endl << endl;
     out << M2 << endl << endl;
