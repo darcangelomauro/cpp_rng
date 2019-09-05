@@ -21,7 +21,7 @@ all: rmxeq mkdep mkxeq
 
 MAIN = simul_range prelim_simul_range
 
-SOURCE = clifford geometry utils HMC_core HMC_fix_nosplit HMC_fix_split HMC_rand_nosplit HMC_rand_split leapfrog MMC params 
+SOURCE = clifford geometry utils HMC_core HMC_fix_nosplit HMC_fix_split HMC_rand_nosplit HMC_rand_split leapfrog MMC params
 
 # search path for modules
 
@@ -42,7 +42,7 @@ LIBPATH = /home/pmxmd10/gsl/lib
 
 # scheduling and optimization options (such as -DSSE -DSSE2 -DP4)
  
-CFLAGS = -std=c++11 -pedantic -fstrict-aliasing -Wall -Wno-long-long -Werror -g 
+CFLAGS = -std=c++11 -pedantic -fstrict-aliasing -Wall -Wno-long-long -Werror 
 
 ############################## do not change ###################################
 

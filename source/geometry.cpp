@@ -211,13 +211,23 @@ void Geom24::derived_parameters()
             vector<int>::const_iterator end(vec.end());
             cx_mat M = gamma.at(*begin);
 
+            //cout << *begin << " ";
             for(vector<int>::const_iterator iter = vec.begin() + 1; iter != end; ++iter)
+            {
                 M *= gamma.at((*iter));
+                //cout << *iter << " ";
+            }
 
             if(M.is_hermitian())
+            {
                 herm.push_back(M);
+                //cout << "herm" << endl;
+            }
             else
+            {
                 anti.push_back(cx_double(0, 1)*M);
+                //cout << "antiherm" << endl;
+            }
         }
 	}
 
@@ -335,7 +345,7 @@ void Geom24::print_omega_table_4() const
             vector<int>::const_iterator end(prod.end());
             for(vector<int>::const_iterator iter = prod.begin(); iter != end; ++iter)
             {
-                cout << (*iter);
+                cout << (*iter) << " ";
                 e *= eps[(*iter)];
             }
             cout << " " << omega_table_4[i] << e << endl;
@@ -408,6 +418,7 @@ double Geom24::dirac2() const
 double Geom24::calculate_S() const
 {
     return g2*dirac2() + dirac4();
+    //return dirac2();
 }
 
 
@@ -625,7 +636,7 @@ double Geom24::calculate_K() const
     for(int i=0; i<nHL; ++i)
         res += trace(mom[i]*mom[i]).real();
 
-    return res/2.;
+    return res/2;
 }
 
 double Geom24::calculate_H() const
@@ -690,6 +701,38 @@ cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int&
 
         return cliff*res.st();
     }
+}
+
+cx_mat Geom24::compute_B4_bruteforce(const int& k, const int& i2, const int& i3, const int& i4, const cx_double& cliff, const int& e) const
+{
+    // base matrix products
+    cx_mat M2M3 = mat[i2]*mat[i3];
+    cx_mat M2M4 = mat[i2]*mat[i4];
+    cx_mat M3M4 = mat[i3]*mat[i4];
+    cx_mat M2M3M4 = M2M3*mat[i4];
+
+    // traces
+    cx_double tr234 = trace(M2M3M4);
+    double tr23 = trace(M2M3).real();
+    double tr24 = trace(M2M4).real();
+    double tr34 = trace(M3M4).real();
+    double tr2 = trace(mat[i2]).real();
+    double tr3 = trace(mat[i3]).real();
+    double tr4 = trace(mat[i4]).real();
+
+    // compute sum
+    cx_mat res(dim ,dim, fill::eye);
+    res *= eps[k];
+    res *= tr234 + double(e)*conj(tr234);
+    res += dim*(M2M3M4 + e*M2M3M4.t());
+    res += eps[i2]*tr2*(M3M4 + e*M3M4.t());
+    res += eps[i3]*tr3*(M2M4 + e*M2M4.t());
+    res += eps[i4]*tr4*(M2M3 + e*M2M3.t());
+    res += (1+e)*eps[k]*eps[i2]*tr34*mat[i2];
+    res += (1+e)*eps[k]*eps[i3]*tr24*mat[i3];
+    res += (1+e)*eps[k]*eps[i4]*tr23*mat[i4];
+
+    return cliff*res.st();
 }
 
 cx_mat Geom24::compute_B4_explicit(const int& k, const int& i2, const int& i3, const int& i4, const bool& neg) const
@@ -946,6 +989,46 @@ cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
         return 4*res;
 
 }
+
+cx_mat Geom24::der_dirac4_bruteforce(const int& k, const bool& herm) const
+{
+    cx_mat res(dim, dim, fill::zeros);
+    
+    // four distinct indices
+    for(int i1=0; i1<nHL; ++i1)
+    {
+        for(int i2=0; i2<nHL; ++i2)
+        {
+            for(int i3=0; i3<nHL; ++i3)
+            {
+                for(int i4=0; i4<nHL; ++i4)
+                {
+                    // epsilon factor
+                    int e = eps[i1]*eps[i2]*eps[i3]*eps[i4];
+
+                    // clifford product
+                    cx_double cliff = omega_table_4[i4 + nHL*(i3 + nHL*(i2 + nHL*i1))]; 
+
+                    // compute derivative
+                    if(k==i1)
+                        res += compute_B4_bruteforce(i1,i2,i3,i4, cliff, e);
+                    if(k==i2)
+                        res += compute_B4_bruteforce(i2,i3,i4,i1, cliff, e);
+                    if(k==i3)
+                        res += compute_B4_bruteforce(i3,i4,i1,i2, cliff, e);
+                    if(k==i4)
+                        res += compute_B4_bruteforce(i4,i1,i2,i3, cliff, e);
+                }
+            }
+        }
+    }
+
+    if(herm)
+        return 0.5*(res+res.t());
+    else
+        return res;
+}
+
 
 cx_mat Geom24::der_dirac4_explicit(const int& k, const bool& herm) const
 {
