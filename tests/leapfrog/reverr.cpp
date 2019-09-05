@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <fstream>
 #include <iomanip>
 #include <cstdlib>
@@ -12,7 +13,7 @@
 using namespace std;
 using namespace arma;
 
-#define N 100
+#define N 10000
 #define M 10
 
 int main()
@@ -32,7 +33,6 @@ int main()
     int dim = G.get_dim();
     double g2 = G.get_g2();
     
-    double time = 0.1;
     double tau = 0.01;
 
     ofstream out;
@@ -51,7 +51,10 @@ int main()
             
             double Si = G.calculate_S();
             double Ki = G.calculate_K();
-            G.leapfrog(int(time/tau), tau);
+            G.leapfrog(1, tau);
+            G.reverse_mom(); 
+            G.leapfrog(1, tau);
+            G.reverse_mom(); 
             double Sf = G.calculate_S();
             double Kf = G.calculate_K();
 

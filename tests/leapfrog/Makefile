@@ -19,9 +19,9 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = base quadratic reversibility locerr globerr
+MAIN = base quadratic reversibility locerr globerr reverr fixerr globreverr
 
-SOURCE = clifford geometry utils HMC_core HMC_fix_nosplit HMC_fix_split HMC_rand_nosplit HMC_rand_split leapfrog MMC 
+SOURCE = clifford geometry utils HMC_core HMC_fix_nosplit HMC_fix_split HMC_rand_nosplit HMC_rand_split leapfrog MMC statistics 
 
 # search path for modules
 

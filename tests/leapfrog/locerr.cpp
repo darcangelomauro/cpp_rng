@@ -7,12 +7,13 @@
 #include <gsl/gsl_rng.h>
 #include "geometry.hpp"
 #include "utils.hpp"
+#include "statistics.hpp"
 
 using namespace std;
 using namespace arma;
 
-#define N 1000
-#define M 5
+#define N 10000
+#define M 10
 
 int main()
 {
@@ -21,22 +22,25 @@ int main()
 
 
     // create geometry
-    int p = 0;
-    int q = 3;
-    int dim = 8;
-    double g2 = 2.5;
+    string prefix;
+    cout << "insert p, q, dim, g2" << endl;
+    Geom24 G(cin);
+    cout << "insert prefix" << endl;
+    cin >> prefix;
+    int p = G.get_p();
+    int q = G.get_q();
+    int dim = G.get_dim();
+    double g2 = G.get_g2();
     
-    double tau[M] = {0.001, 0.0005, 0.00025, 0.000125, 0.0000625};
+    double tau = 0.01;
 
     ofstream out;
-    string name = filename_from_data(p, q, dim, g2, "LOCERR");
+    string name = filename_from_data(p, q, dim, g2, prefix);
     out.open("data/" + name + ".txt");
     out.precision(16);
 
     for(int i=0; i<M; ++i)
     {
-        Geom24 G(p, q, dim, g2);
-
         vec dH(N);
         
         for(int j=0; j<N; ++j)
@@ -46,14 +50,21 @@ int main()
             
             double Si = G.calculate_S();
             double Ki = G.calculate_K();
-            G.leapfrog(1, tau[i]);
+            G.leapfrog(1, tau);
             double Sf = G.calculate_S();
             double Kf = G.calculate_K();
 
-            dH(j) = fabs(Sf+Kf-Si-Ki);
+            dH(j) = log(fabs(Sf+Kf-Si-Ki));
         }
 
-        out << log(tau[i]) << " " << log(mean(dH)) << endl;
+        double avg, var;
+        jackknife(dH, avg, var, my_mean);
+        double err = sqrt(var);
+
+        out << log(tau) << " " << avg << " " << err << endl;
+        cout << tau << " " << exp(avg) << endl;
+        
+        tau /= 2;
     }
 
     out.close();

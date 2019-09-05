@@ -52,6 +52,9 @@ int main()
             double Si = G.calculate_S();
             double Ki = G.calculate_K();
             G.leapfrog(int(time/tau), tau);
+            G.reverse_mom(); 
+            G.leapfrog(int(time/tau), tau);
+            G.reverse_mom(); 
             double Sf = G.calculate_S();
             double Kf = G.calculate_K();
 

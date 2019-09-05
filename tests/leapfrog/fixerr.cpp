@@ -22,21 +22,16 @@ int main()
 
 
     // create geometry
-    string prefix;
-    cout << "insert p, q, dim, g2" << endl;
     Geom24 G(cin);
-    cout << "insert prefix" << endl;
-    cin >> prefix;
     int p = G.get_p();
     int q = G.get_q();
     int dim = G.get_dim();
     double g2 = G.get_g2();
     
-    double time = 0.1;
-    double tau = 0.01;
+    double tau = 0.1;
 
     ofstream out;
-    string name = filename_from_data(p, q, dim, g2, prefix);
+    string name = filename_from_data(p, q, dim, g2, "FIXERR");
     out.open("data/" + name + ".txt");
     out.precision(16);
 
@@ -51,7 +46,7 @@ int main()
             
             double Si = G.calculate_S();
             double Ki = G.calculate_K();
-            G.leapfrog(int(time/tau), tau);
+            G.leapfrog(100, tau);
             double Sf = G.calculate_S();
             double Kf = G.calculate_K();
 

@@ -21,17 +21,16 @@ int main()
 
 
     // create geometry
-    int p = 1;
-    int q = 3;
-    int dim = 8;
-    double g2 = 2.5;
+    Geom24 G(cin);
+    int p = G.get_p();
+    int q = G.get_q();
+    int dim = G.get_dim();
+    double g2 = G.get_g2();
     
     ofstream out;
     string name = filename_from_data(p, q, dim, g2, "DER4");
     out.open("data/" + name + ".txt");
     out.precision(16);
-
-    Geom24 G(p, q, dim, g2);
 
     for(int i=0; i<N; ++i)
     {
@@ -41,9 +40,9 @@ int main()
         for(int j=0; j<G.get_nHL(); ++j)
         {
             cx_mat M1 = G.der_dirac4(j, true);
-            cx_mat M2 = G.der_dirac4_explicit(j, true);
+            cx_mat M2 = G.der_dirac4_bruteforce(j, true);
             cx_mat M3 = G.der_dirac4(j, false);
-            cx_mat M4 = G.der_dirac4_explicit(j, false);
+            cx_mat M4 = G.der_dirac4_bruteforce(j, false);
             out << approx_equal(M1, M2, "absdiff", tol) << " " << approx_equal(M3, M4, "absdiff", tol) << " ";
             out << approx_equal(M1, M3, "absdiff", tol) << " " << approx_equal(M2, M4, "absdiff", tol) << " ";
             out << approx_equal(M1, M4, "absdiff", tol) << " " << approx_equal(M2, M3, "absdiff", tol) << endl;

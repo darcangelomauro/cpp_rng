@@ -26,7 +26,7 @@ int main()
     double Si = G.calculate_S();
     double Ki = G.calculate_K();
     clock_t start1 = clock();
-    G.leapfrog(100, 0.0001, 100);
+    G.leapfrog(100, 0.0001);
     clock_t end = clock();
     double Sf = G.calculate_S();
     double Kf = G.calculate_K();
