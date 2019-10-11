@@ -13,7 +13,7 @@ using namespace std;
 using namespace arma;
 
 #define N 10000
-#define M 5
+#define nbins 20
 
 int main()
 {
@@ -32,39 +32,42 @@ int main()
     int dim = G.get_dim();
     double g2 = G.get_g2();
     
-    double tau = 0.0001;
+    double tau = 0.001;
 
     ofstream out;
     string name = filename_from_data(p, q, dim, g2, prefix);
     out.open("data/" + name + ".txt");
     out.precision(16);
 
-    for(int i=0; i<M; ++i)
+    G.shuffle(engine);
+    G.sample_mom(engine);
+    
+    vec dH(N);
+    double Si = G.calculate_S();
+    double Ki = G.calculate_K();
+    
+    for(int j=0; j<N; ++j)
     {
-        vec dH(N);
+        Geom24 G1 = G;
         
-        for(int j=0; j<N; ++j)
-        {
-            G.shuffle(engine);
-            G.sample_mom(engine);
-            
-            double Si = G.calculate_S();
-            double Ki = G.calculate_K();
-            G.leapfrog(1, tau, 10);
-            double Sf = G.calculate_S();
-            double Kf = G.calculate_K();
+        G1.leapfrog(100, tau);
+        double Sf = G.calculate_S();
+        double Kf = G.calculate_K();
 
-            dH(j) = log(fabs(Sf+Kf-Si-Ki));
-        }
+        dH(j) = Sf+Kf-Si-Ki;
+    }
+    
+    vec dH_sorted = sort(dH);
+    uvec count = hist(dH_sorted, nbins);
 
-        double avg, var;
-        jackknife(dH, avg, var, my_mean);
-        double err = sqrt(var);
+    double range = dH_sorted(N-1) - dH_sorted(0);
+    double step = range / nbins;
 
-        out << log(tau) << " " << avg << " " << err << endl;
-        cout << tau << " " << exp(avg) << endl;
-        
-        tau /= 2;
+    double center = dH_sorted(0) + step/2;
+    for(int i=0; i<nbins; ++i)
+    {
+        out << center << " " << count(i) << endl;
+        center += step;
     }
 
     out.close();

@@ -6,7 +6,7 @@
 
 #define MAT(i) get_mat(i)
 #define EPS(i) get_eps(i)
-#define GAMMA(i) get_gamma(i)
+#define OMEGA(i) get_omega(i)
 
 class Geom24
 {
@@ -31,13 +31,17 @@ class Geom24
         int get_nL() const {return nL;}
         int get_nHL() const {return nHL;}
         int get_dim_omega() const {return dim_omega;}
-        int get_eps(int i) const {return eps[i];}
+        int get_eps(const int& i) const {return eps[i];}
         double get_g2() const {return g2;}
-        arma::cx_mat get_mat(int i) const {return mat[i];}
-        arma::cx_mat get_mom(int i) const {return mom[i];}
-        arma::cx_mat get_omega(int i) const {return omega[i];}
-        arma::cx_double get_omega_table_4(int i) const {return omega_table_4[i];}
+        arma::cx_mat get_mat(const int& i) const {return mat[i];}
+        arma::cx_mat get_mom(const int& i) const {return mom[i];}
+        arma::cx_mat get_omega(const int& i) const {return omega[i];}
+        arma::cx_double get_omega_table_4(const int& i) const {return omega_table_4[i];}
         // ============== GET METHODS
+
+        // ============== SET METHODS
+        void mult_mat(const int& i, const double& d) { mat[i] *= d; }
+        // ============== SET METHODS
 
         
 
@@ -57,16 +61,21 @@ class Geom24
 
         // ============== DERIVATIVE METHODS
         arma::cx_mat compute_B4(const int&, const int&, const int&, const int&, const double&, const bool&) const;
+        void compute_B4_cout(const int&, const int&, const int&, const int&, const double&, const bool&) const;
         arma::cx_mat compute_B4_bruteforce(const int&, const int&, const int&, const int&, const arma::cx_double&, const int&) const;
         arma::cx_mat compute_B4_explicit(const int&, const int&, const int&, const int&, const bool&) const;
         arma::cx_mat compute_B2(const int&, const int&) const;
+        void compute_B2_cout(const int&, const int&) const;
         arma::cx_mat compute_B2_iik_explicit(const int&, const int&) const;
         arma::cx_mat compute_B2_iki_explicit(const int&, const int&) const;
         arma::cx_mat compute_B(const int&) const;
+        void compute_B_cout(const int&) const;
         arma::cx_mat der_dirac4(const int&, const bool&) const;
+        void der_dirac4_cout(const int&) const;
         arma::cx_mat der_dirac4_bruteforce(const int&, const bool&) const;
         arma::cx_mat der_dirac4_explicit(const int&, const bool&) const;
         arma::cx_mat der_dirac2(const int&) const;
+        void der_dirac2_cout(const int&) const;
         arma::cx_mat der_dirac24(const int&, const bool&) const;
         arma::cx_mat debug_2equal(const int&) const;
         arma::cx_mat debug_2equal_explicit(const int&) const;

@@ -92,7 +92,7 @@ struct Simul_params
 bool read_init_stream(std::istream&, struct Simul_params&);
 
 // Checks that the necessary parameters are there
-bool params_validity(struct Simul_params&);
+bool params_validity(const struct Simul_params&);
 
 #endif
 

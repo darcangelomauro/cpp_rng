@@ -19,7 +19,7 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = base mat 2equal 4diff 
+MAIN = base mat 2equal 4diff print 
 
 SOURCE = clifford geometry utils HMC_core HMC_fix_nosplit HMC_fix_split HMC_rand_nosplit HMC_rand_split leapfrog MMC 
 

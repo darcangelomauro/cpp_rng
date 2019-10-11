@@ -117,7 +117,7 @@ bool read_init_stream(istream& in, struct Simul_params& sm)
     return success;
 }
 
-bool params_validity(struct Simul_params& sm)
+bool params_validity(const struct Simul_params& sm)
 {
     if(sm.control.find("p:") == std::string::npos)
     {

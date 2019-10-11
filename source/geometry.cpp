@@ -183,10 +183,11 @@ void Geom24::derived_parameters()
 
     for(int i=0; i<p; ++i)
         herm.push_back(gamma[i]);
+
     for(int i=0; i<q; ++i)
         anti.push_back(cx_double(0, 1)*gamma[p+i]);
-
-	int  count = pow(2, n);
+    
+    int  count = pow(2, n);
 	// The outer for loop will run 2^n times (the number of all possible subsets).
 	// Here variable i will act as a binary counter
 	for (int i=0; i<count; i++)
@@ -703,6 +704,58 @@ cx_mat Geom24::compute_B4(const int& k, const int& i2, const int& i3, const int&
     }
 }
 
+void Geom24::compute_B4_cout(const int& k, const int& i2, const int& i3, const int& i4, const double& cliff, const bool& neg) const
+{
+    if(neg)
+    {
+        // base matrix products
+        cx_mat M2M3 = mat[i2]*mat[i3];
+        cx_mat M2M4 = mat[i2]*mat[i4];
+        cx_mat M3M4 = mat[i3]*mat[i4];
+        cx_mat M2M3M4 = M2M3*mat[i4];
+
+        // traces
+        double tr234 = trace(M2M3M4).imag();
+        double tr2 = trace(mat[i2]).real();
+        double tr3 = trace(mat[i3]).real();
+        double tr4 = trace(mat[i4]).real();
+
+        // compute sum
+        cout << -2*cliff*eps[k]*tr234 << endl;
+        cout << -double(dim)*cliff*2*M2M3M4(0,0).imag() << endl;
+        cout << -eps[i2]*tr2*cliff*2*M3M4(0,0).imag() << endl;
+        cout << -eps[i3]*tr3*cliff*2*M2M4(0,0).imag() << endl;
+        cout << -eps[i4]*tr4*cliff*2*M2M3(0,0).imag() << endl;
+    }
+    else
+    {
+        // base matrix products
+        cx_mat M2M3 = mat[i2]*mat[i3];
+        cx_mat M2M4 = mat[i2]*mat[i4];
+        cx_mat M3M4 = mat[i3]*mat[i4];
+        cx_mat M2M3M4 = M2M3*mat[i4];
+
+        // traces
+        double tr234 = trace(M2M3M4).real();
+        double tr23 = trace(M2M3).real();
+        double tr24 = trace(M2M4).real();
+        double tr34 = trace(M3M4).real();
+        double tr2 = trace(mat[i2]).real();
+        double tr3 = trace(mat[i3]).real();
+        double tr4 = trace(mat[i4]).real();
+
+        // compute sum
+        cout << 2*cliff*eps[k]*tr234 << endl;
+        cout << dim*2*cliff*M2M3M4(0,0).real() << endl;
+        cout << eps[i2]*cliff*tr2*2*M3M4(0,0).real() << endl;
+        cout << eps[i3]*cliff*tr3*2*M2M4(0,0).real() << endl;
+        cout << eps[i4]*cliff*tr4*2*M2M3(0,0).real() << endl;
+        cout << 2*eps[k]*eps[i2]*cliff*tr34*mat[i2](0,0).real() << endl;
+        cout << 2*eps[k]*eps[i3]*cliff*tr24*mat[i3](0,0).real() << endl;
+        cout << 2*eps[k]*eps[i4]*cliff*tr23*mat[i4](0,0).real() << endl;
+    }
+}
+
 cx_mat Geom24::compute_B4_bruteforce(const int& k, const int& i2, const int& i3, const int& i4, const cx_double& cliff, const int& e) const
 {
     // base matrix products
@@ -843,6 +896,47 @@ cx_mat Geom24::compute_B2(const int& k, const int& i) const
     }
 }
 
+void Geom24::compute_B2_cout(const int& k, const int& i) const
+{
+    // clifford product
+    double cliff = omega_table_4[i + nHL*(k + nHL*(i + nHL*k))].real();
+
+    // base matrix products
+    cx_mat MiMk = mat[i]*mat[k];
+    cx_mat MiMi = mat[i]*mat[i];
+    cx_mat MiMiMk = mat[i]*MiMk;
+    cx_mat MiMkMi = MiMk*mat[i];
+
+    // traces
+    double triki = trace(MiMkMi).real();
+    double trik = trace(MiMk).real();
+    double trii = trace(MiMi).real();
+    double tri = trace(mat[i]).real();
+    double trk = trace(mat[k]).real();
+    
+    
+    if(cliff < 0)
+    {
+        // compute sum
+        cout << eps[k]*2*dim_omega*triki << endl;
+        cout << dim*2*dim_omega*(2*MiMiMk(0,0).real() - MiMkMi(0,0).real()) << endl;
+        cout << eps[i]*tri*2*dim_omega*2*MiMk(0,0).real() << endl;
+        cout << 2*eps[k]*eps[i]*trik*2*dim_omega*mat[i](0,0).real() << endl;
+        cout << eps[k]*trk*2*dim_omega*MiMi(0,0).real() << endl;
+        cout << trii*2*dim_omega*mat[k](0,0).real() << endl;
+    }
+    else
+    {
+        // compute sum
+        cout << 3*eps[k]*2*dim_omega*triki << endl;
+        cout << dim*2*dim_omega*(2*MiMiMk(0,0).real() + MiMkMi(0,0).real()) << endl;
+        cout << 3*eps[i]*2*dim_omega*tri*2*MiMk(0,0).real() << endl;
+        cout << 6*eps[k]*eps[i]*2*dim_omega*trik*mat[i](0,0).real() << endl;
+        cout << 3*eps[k]*2*dim_omega*trk*MiMi(0,0).real() << endl;
+        cout << 3*2*dim_omega*trii*mat[k](0,0).real() << endl;
+    }
+}
+
 cx_mat Geom24::compute_B2_iki_explicit(const int& k, const int& i) const
 {
     // base matrix products
@@ -919,6 +1013,23 @@ cx_mat Geom24::compute_B(const int& k) const
     return 2*dim_omega*res.st();
 }
 
+void Geom24::compute_B_cout(const int& k) const
+{
+    // base matrix products
+    cx_mat M2 = mat[k]*mat[k];
+    cx_mat M3 = mat[k]*M2;
+
+    // traces
+    double tr3 = trace(M3).real();
+    double tr2 = trace(M2).real();
+    double tr1 = trace(mat[k]).real();
+
+    cout << eps[k]*2*dim_omega*tr3 << endl;
+    cout << dim*2*dim_omega*M3(0,0).real() << endl;
+    cout << 3*2*dim_omega*tr2*mat[k](0,0).real() << endl;
+    cout << 3*eps[k]*2*dim_omega*tr1*M2(0,0).real() << endl;
+}
+
 cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
 {
     cx_mat res(dim, dim, fill::zeros);
@@ -988,6 +1099,70 @@ cx_mat Geom24::der_dirac4(const int& k, const bool& herm) const
     else
         return 4*res;
 
+}
+
+void Geom24::der_dirac4_cout(const int& k) const
+{
+    // four distinct indices
+    for(int i1=0; i1<nHL; ++i1)
+    {
+        if(i1 != k)
+        {
+            for(int i2=i1+1; i2<nHL; ++i2)
+            {
+                if(i2 != k)
+                {
+                    for(int i3=i2+1; i3<nHL; ++i3)
+                    {
+                        if(i3 != k)
+                        {
+                            // epsilon factor
+                            int e = eps[k]*eps[i1]*eps[i2]*eps[i3];
+
+                            if(e<0)
+                            {
+                                // clifford product
+                                double cliff1 = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].imag(); 
+                                double cliff2 = omega_table_4[i2 + nHL*(i3 + nHL*(i1 + nHL*k))].imag(); 
+                                double cliff3 = omega_table_4[i3 + nHL*(i1 + nHL*(i2 + nHL*k))].imag(); 
+
+                                if(cliff1 != 0.)
+                                {
+                                    compute_B4_cout(k,i1,i2,i3, cliff1, true);
+                                    compute_B4_cout(k,i1,i3,i2, cliff2, true);
+                                    compute_B4_cout(k,i2,i1,i3, cliff3, true);
+                                }
+                            }
+                            else
+                            {
+                                // clifford product
+                                double cliff1 = omega_table_4[i3 + nHL*(i2 + nHL*(i1 + nHL*k))].real(); 
+                                double cliff2 = omega_table_4[i2 + nHL*(i3 + nHL*(i1 + nHL*k))].real(); 
+                                double cliff3 = omega_table_4[i3 + nHL*(i1 + nHL*(i2 + nHL*k))].real(); 
+
+                                if(cliff1 != 0.)
+                                {
+                                    compute_B4_cout(k,i1,i2,i3, cliff1, false);
+                                    compute_B4_cout(k,i1,i3,i2, cliff2, false);
+                                    compute_B4_cout(k,i2,i1,i3, cliff3, false);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // two distinct pairs of equal indices
+    for(int i=0; i<nHL; ++i)
+    {
+        if(i != k)
+            compute_B2_cout(k,i);
+    }
+
+    // all indices equal
+    compute_B_cout(k);
 }
 
 cx_mat Geom24::der_dirac4_bruteforce(const int& k, const bool& herm) const
@@ -1235,6 +1410,12 @@ cx_mat Geom24::der_dirac2(const int& k) const
     res += dim*mat[k].st();
 
     return 4*dim_omega*res;
+}
+
+void Geom24::der_dirac2_cout(const int& k) const
+{
+    cout << g2*4*dim_omega*eps[k]*trace(mat[k]).real() << endl;
+    cout << g2*4*dim_omega*dim*mat[k](0,0).real() << endl;
 }
 
 cx_mat Geom24::der_dirac24(const int& k, const bool& herm) const

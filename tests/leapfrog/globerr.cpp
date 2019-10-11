@@ -32,8 +32,8 @@ int main()
     int dim = G.get_dim();
     double g2 = G.get_g2();
     
-    double time = 0.1;
-    double tau = 0.01;
+    double time = 0.0001;
+    double tau = 0.00001;
 
     ofstream out;
     string name = filename_from_data(p, q, dim, g2, prefix);
