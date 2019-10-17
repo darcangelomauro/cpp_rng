@@ -80,7 +80,7 @@ string foldername_from_time(const time_t& t)
     if(timePtr->tm_mon < 9)
         month = "0" + to_string(timePtr->tm_mon + 1);
     else
-        month =to_string(timePtr->tm_mon);
+        month =to_string(timePtr->tm_mon + 1);
 
     string year = to_string(timePtr->tm_year + 1900);
 
