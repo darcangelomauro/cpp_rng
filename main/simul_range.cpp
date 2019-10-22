@@ -81,6 +81,7 @@ int main(int argc, char** argv)
     {
         // Create geometry
         Geom24 G(sm.p, sm.q, sm.dim, g2);
+        G.shuffle(engine);
         clog << G << endl;
 
 
