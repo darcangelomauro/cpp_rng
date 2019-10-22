@@ -19,7 +19,7 @@ all: rmxeq mkdep mkxeq
 
 # main programs and required modules 
 
-MAIN = base_analysis F F_sus dofs dofs_prelim time_analysis commp0q3 commp1q3_1 commp1q3_2 eigvals eigvals_nh0 eigvals_nl0 decimate
+MAIN = base_analysis F F_sus dofs dofs_prelim time_analysis commp0q3 commp1q3_1 commp1q3_2 eigvals eigvals_nh0 eigvals_nl0 decimate pairing_25 pairing_26 eigvalsp1q3_L1 eigvalsp1q3_L2 eigvalsp1q3_L3 pairing_23 pairing_24 pairing_27 pairing_35 pairing_36 pairing_37 pairing_45 pairing_46 pairing_47 antipairing_23 antipairing_24 antipairing_34 S
 
 SOURCE = clifford geometry utils statistics params 
 
